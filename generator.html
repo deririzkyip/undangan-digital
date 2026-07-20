@@ -552,12 +552,21 @@
         <!-- GOOGLE SHEETS FORMULA INFO -->
         <div class="info-section">
             <h3><i class="fa-solid fa-table"></i> Cara Otomatis dengan Google Sheets</h3>
-            <p>Jika Anda memiliki daftar nama tamu di Google Sheets (misal kolom <strong>A</strong>), masukkan rumus ini
-                di kolom <strong>B</strong> untuk membuat link otomatis:</p>
-            <div class="formula-box" id="formula-display" onclick="copyFormula()" title="Klik untuk menyalin rumus">
-                =CONCATENATE("https://domain.com/index.html?to=", ENCODEURL(A2))</div>
-            <p style="font-size: 0.8rem; font-style: italic;">💡 Klik rumus di atas untuk menyalin. Tarik ke bawah untuk
-                membuat link bagi semua baris tamu Anda.</p>
+            <p>Jika Anda memiliki daftar nama tamu di Google Sheets (kolom <strong>A</strong> = nama tamu), gunakan dua rumus berikut:</p>
+
+            <p style="margin-top: 14px;"><strong>📎 Kolom B — Rumus Link Undangan:</strong></p>
+            <div style="display: flex; gap: 10px; align-items: stretch; margin: 6px 0;">
+                <div class="formula-box" id="formula-display" style="flex: 1; margin: 0; cursor: default;">=CONCATENATE("https://domain.com/index.html?to=", ENCODEURL(A2))</div>
+                <button class="toolbar-btn primary" onclick="copyLinkFormula()" style="white-space: nowrap; align-self: stretch;"><i class="fa-solid fa-copy"></i> Salin Rumus</button>
+            </div>
+            <p style="font-size: 0.8rem; font-style: italic; margin-bottom: 18px;">💡 Paste di kolom <strong>B2</strong>, lalu tarik ke bawah untuk semua baris tamu.</p>
+
+            <p><strong>💬 Kolom C — Rumus Teks Pesan WA Lengkap:</strong></p>
+            <div style="display: flex; gap: 10px; align-items: stretch; margin: 6px 0;">
+                <div class="formula-box" id="formula-message" style="flex: 1; margin: 0; cursor: default; font-size: 0.78rem; word-break: break-all;">loading...</div>
+                <button class="toolbar-btn success" onclick="copyMessageFormula()" style="white-space: nowrap; align-self: stretch;"><i class="fa-solid fa-copy"></i> Salin Rumus</button>
+            </div>
+            <p style="font-size: 0.8rem; font-style: italic;">💡 Paste di kolom <strong>C2</strong>. Setiap sel akan berisi teks pesan WA lengkap siap kirim untuk masing-masing tamu.</p>
         </div>
 
         <!-- GOOGLE SHEET URL CONFIG -->
@@ -586,6 +595,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         let rowCounter = 0;
 
@@ -691,7 +701,8 @@
         }
 
         function buildMessage(name, link) {
-            return `Yth. ${name},\n\n Assalamualaikum Wr. Wb \n\n Dengan memohon Rahmat Dan Ridho Allah SWT, Dan tanpa mengurangi rasa hormat kami. melalui media sosial ini, kami (nama mempelai) mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami. \n\n Detail undangan dan konfirmasi kehadiran dapat diakses melalui link berikut:\n\n${link}\n\n Merupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami \n\n Terima kasih kami sampaikan Bapak/Ibu/Sdr/i. \n\n Wassalamualaikum Wr.Wb.`;
+            const couple = (window.weddingConfig ? `${weddingConfig.mempelaiPriaShort} & ${weddingConfig.mempelaiWanitaShort}` : "Romeo & Juliet");
+            return `Yth. ${name},\n\n Assalamualaikum Wr. Wb \n\n Dengan memohon Rahmat Dan Ridho Allah SWT, Dan tanpa mengurangi rasa hormat kami. melalui media sosial ini, kami (${couple}) mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami. \n\n Detail undangan dan konfirmasi kehadiran dapat diakses melalui link berikut:\n\n${link}\n\n Merupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami \n\n Terima kasih kami sampaikan Bapak/Ibu/Sdr/i. \n\n Wassalamualaikum Wr.Wb.`;
         }
 
         function sendWA(btn) {
@@ -819,13 +830,25 @@
 
         function updateFormula() {
             const base = getBaseUrl();
+            // Rumus link
             document.getElementById('formula-display').textContent = `=CONCATENATE("${base}?to=", ENCODEURL(A2))`;
+            // Rumus pesan WA lengkap menggunakan CHAR(10) untuk baris baru di Google Sheets
+            const couple = (window.weddingConfig ? `${weddingConfig.mempelaiPriaShort} & ${weddingConfig.mempelaiWanitaShort}` : "Romeo & Juliet");
+            const msgFormula = `=CONCATENATE("Yth. ",A2,",",CHAR(10),CHAR(10)," Assalamualaikum Wr. Wb ",CHAR(10),CHAR(10)," Dengan memohon Rahmat Dan Ridho Allah SWT, Dan tanpa mengurangi rasa hormat kami. melalui media sosial ini, kami (${couple}) mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami. ",CHAR(10),CHAR(10)," Detail undangan dan konfirmasi kehadiran dapat diakses melalui link berikut:",CHAR(10),CHAR(10),"${base}?to=",ENCODEURL(A2),CHAR(10),CHAR(10)," Merupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami ",CHAR(10),CHAR(10)," Terima kasih kami sampaikan Bapak/Ibu/Sdr/i. ",CHAR(10),CHAR(10)," Wassalamualaikum Wr.Wb.")`;
+            document.getElementById('formula-message').textContent = msgFormula;
         }
 
-        function copyFormula() {
+        function copyLinkFormula() {
             const formula = document.getElementById('formula-display').textContent;
             navigator.clipboard.writeText(formula).then(() => {
-                Swal.fire({ icon: 'success', title: 'Rumus disalin!', text: 'Paste di kolom B2 Google Sheets Anda.', timer: 2000, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Rumus Link disalin!', text: 'Paste di kolom B2 Google Sheets Anda.', timer: 2000, showConfirmButton: false });
+            });
+        }
+
+        function copyMessageFormula() {
+            const formula = document.getElementById('formula-message').textContent;
+            navigator.clipboard.writeText(formula).then(() => {
+                Swal.fire({ icon: 'success', title: 'Rumus Pesan WA disalin!', text: 'Paste di kolom C2 Google Sheets Anda.', timer: 2000, showConfirmButton: false });
             });
         }
 
