@@ -39,7 +39,7 @@ const weddingConfig = {
     mapsEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.280807759881!2d112.71261777590822!3d-7.322332672023162!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fb764d2cf99b%3A0x633519808d4b3b28!2sMasjid%20Nasional%20Al-Akbar%20Surabaya!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid",
 
     // Link tombol Google Maps (untuk dibuka di aplikasi HP)
-    mapsButtonUrl: "https://maps.app.goo.gl/wj3J9HG5XmmKZg5NA?g_st=ic",
+    mapsButtonUrl: "https://maps.app.goo.gl/GEKcXHsmS1pLHpNs9",
 
     // 5. TOMBOL SIMPAN TANGGAL (GOOGLE CALENDAR)
     // Buat link kalender di https://www.calendar.google.com jika ingin menyesuaikan
