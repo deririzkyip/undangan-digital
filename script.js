@@ -2,6 +2,54 @@
 // Romeo & Juliet Wedding
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. DINAMISASI DARI CONFIG.JS
+    if (window.weddingConfig) {
+        const cfg = window.weddingConfig;
+        
+        // Mempelai & Judul
+        const fullname = `${cfg.mempelaiPriaShort} & ${cfg.mempelaiWanitaShort}`;
+        if (document.getElementById('config-cover-couple')) document.getElementById('config-cover-couple').textContent = fullname;
+        if (document.getElementById('config-hero-couple')) document.getElementById('config-hero-couple').textContent = fullname;
+        if (document.getElementById('config-footer-couple')) document.getElementById('config-footer-couple').textContent = fullname;
+        
+        // Tanggal cover & hero
+        if (document.getElementById('config-cover-date')) document.getElementById('config-cover-date').textContent = cfg.weddingDateSimple;
+        if (document.getElementById('config-hero-date')) document.getElementById('config-hero-date').textContent = cfg.weddingDateDots;
+        
+        // Info Mempelai Pria
+        if (document.getElementById('config-pria-name')) document.getElementById('config-pria-name').textContent = cfg.mempelaiPria;
+        if (document.getElementById('config-pria-ortu')) {
+            document.getElementById('config-pria-ortu').innerHTML = `Putra dari pasangan <br><strong>${cfg.mempelaiPriaOrtu}</strong>`;
+        }
+        if (document.getElementById('config-pria-ig')) document.getElementById('config-pria-ig').href = cfg.mempelaiPriaInstagram;
+        
+        // Info Mempelai Wanita
+        if (document.getElementById('config-wanita-name')) document.getElementById('config-wanita-name').textContent = cfg.mempelaiWanita;
+        if (document.getElementById('config-wanita-ortu')) {
+            document.getElementById('config-wanita-ortu').innerHTML = `Putri dari pasangan <br><strong>${cfg.mempelaiWanitaOrtu}</strong>`;
+        }
+        if (document.getElementById('config-wanita-ig')) document.getElementById('config-wanita-ig').href = cfg.mempelaiWanitaInstagram;
+        
+        // Akad
+        if (document.getElementById('config-akad-date')) document.getElementById('config-akad-date').textContent = cfg.akadDate;
+        if (document.getElementById('config-akad-time')) document.getElementById('config-akad-time').textContent = cfg.akadTime;
+        if (document.getElementById('config-akad-location')) {
+            document.getElementById('config-akad-location').innerHTML = `<strong>${cfg.akadLocationName}</strong><br>${cfg.akadLocationAddress}`;
+        }
+        
+        // Resepsi
+        if (document.getElementById('config-resepsi-date')) document.getElementById('config-resepsi-date').textContent = cfg.resepsiDate;
+        if (document.getElementById('config-resepsi-time')) document.getElementById('config-resepsi-time').textContent = cfg.resepsiTime;
+        if (document.getElementById('config-resepsi-location')) {
+            document.getElementById('config-resepsi-location').innerHTML = `<strong>${cfg.resepsiLocationName}</strong><br>${cfg.resepsiLocationAddress}`;
+        }
+        
+        // Maps & Kalender
+        if (document.getElementById('config-maps-iframe')) document.getElementById('config-maps-iframe').src = cfg.mapsEmbedUrl;
+        if (document.getElementById('config-maps-btn')) document.getElementById('config-maps-btn').href = cfg.mapsButtonUrl;
+        if (document.getElementById('config-calendar-btn')) document.getElementById('config-calendar-btn').href = cfg.calendarUrl;
+    }
+
     // 1. PARSING NAMA TAMU DARI URL PARAMETER (?to=Nama+Tamu)
     const getQueryParam = (param) => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -89,8 +137,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. COUNTDOWN TIMER (12 Oktober 2026)
-    const targetDate = new Date("September 12, 2026 08:00:00").getTime();
+    // 4. COUNTDOWN TIMER
+    const targetDateStr = (window.weddingConfig && window.weddingConfig.countdownDate) 
+        ? window.weddingConfig.countdownDate 
+        : "September 12, 2026 08:00:00";
+    const targetDate = new Date(targetDateStr).getTime();
 
     const updateCountdown = () => {
         const now = new Date().getTime();
