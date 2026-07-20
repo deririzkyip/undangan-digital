@@ -3,13 +3,13 @@
 
 const weddingConfig = {
     // 1. NAMA MEMPELAI
-    mempelaiPria: "Romeo Montague",
-    mempelaiPriaShort: "Romeo",
+    mempelaiPria: "Aldi",
+    mempelaiPriaShort: "Aldi",
     mempelaiPriaOrtu: "Bpk. Montague & Ibu Lady Montague",
     mempelaiPriaInstagram: "#", // ganti dengan link instagram jika ada
 
-    mempelaiWanita: "Juliet Capulet",
-    mempelaiWanitaShort: "Juliet",
+    mempelaiWanita: "Rika",
+    mempelaiWanitaShort: "Rika",
     mempelaiWanitaOrtu: "Bpk. Capulet & Ibu Lady Capulet",
     mempelaiWanitaInstagram: "#", // ganti dengan link instagram jika ada
 
