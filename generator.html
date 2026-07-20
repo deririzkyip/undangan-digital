@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generator Link Tamu - Undangan Digital</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -16,98 +19,481 @@
             --card: #FFFFFF;
             --text: #1A2332;
             --muted: #5A6B7F;
-            --border: rgba(27,58,107,0.12);
+            --border: rgba(27, 58, 107, 0.12);
             --row-alt: #F5F8FC;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
 
         /* HEADER */
-        .page-header { background: linear-gradient(135deg, var(--primary), #2A5298); color: #fff; padding: 30px 20px; text-align: center; }
-        .page-header h1 { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 6px; }
-        .page-header p { font-size: 0.95rem; opacity: 0.85; font-weight: 400; }
+        .page-header {
+            background: linear-gradient(135deg, var(--primary), #2A5298);
+            color: #fff;
+            padding: 30px 20px;
+            text-align: center;
+        }
 
-        .main-container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+        }
+
+        .page-header p {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            font-weight: 400;
+        }
+
+        .main-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
 
         /* CONFIG BAR */
-        .config-bar { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
-        .config-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 250px; }
-        .config-group label { font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
-        .config-group input { padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; transition: border 0.3s; }
-        .config-group input:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
+        .config-bar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .config-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .config-group input {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .config-group input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+        }
 
         /* SPREADSHEET TABLE */
-        .sheet-wrapper { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-        .sheet-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); background: #F8FAFD; flex-wrap: wrap; gap: 10px; }
-        .sheet-toolbar .left-actions { display: flex; gap: 10px; }
-        .sheet-toolbar .right-actions { display: flex; gap: 10px; }
-        .toolbar-btn { padding: 8px 16px; font-size: 0.82rem; font-weight: 700; border-radius: 8px; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
-        .toolbar-btn.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
-        .toolbar-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27,58,107,0.25); }
-        .toolbar-btn.outline { background: #fff; color: var(--primary); border: 1.5px solid var(--border); }
-        .toolbar-btn.outline:hover { background: var(--bg); }
-        .toolbar-btn.success { background: #25D366; color: #fff; }
-        .toolbar-btn.success:hover { background: #20BD5A; }
-        .toolbar-btn.danger { background: #E74C3C; color: #fff; }
-        .toolbar-btn.danger:hover { background: #C0392B; }
+        .sheet-wrapper {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .sheet-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: #F8FAFD;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .sheet-toolbar .left-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .sheet-toolbar .right-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toolbar-btn {
+            padding: 8px 16px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .toolbar-btn.primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+        }
+
+        .toolbar-btn.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(27, 58, 107, 0.25);
+        }
+
+        .toolbar-btn.outline {
+            background: #fff;
+            color: var(--primary);
+            border: 1.5px solid var(--border);
+        }
+
+        .toolbar-btn.outline:hover {
+            background: var(--bg);
+        }
+
+        .toolbar-btn.success {
+            background: #25D366;
+            color: #fff;
+        }
+
+        .toolbar-btn.success:hover {
+            background: #20BD5A;
+        }
+
+        .toolbar-btn.danger {
+            background: #E74C3C;
+            color: #fff;
+        }
+
+        .toolbar-btn.danger:hover {
+            background: #C0392B;
+        }
 
         /* TABLE */
-        .sheet-table { width: 100%; border-collapse: collapse; }
-        .sheet-table thead th { background: var(--primary); color: #fff; padding: 12px 16px; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; text-align: left; position: sticky; top: 0; z-index: 10; }
-        .sheet-table thead th:first-child { width: 50px; text-align: center; }
-        .sheet-table thead th:nth-child(2) { width: 35%; }
-        .sheet-table thead th:nth-child(3) { width: auto; }
-        .sheet-table thead th:last-child { width: 180px; text-align: center; }
+        .sheet-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-        .sheet-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-        .sheet-table tbody tr:nth-child(even) { background: var(--row-alt); }
-        .sheet-table tbody tr:hover { background: #E8F0FE; }
+        .sheet-table thead th {
+            background: var(--primary);
+            color: #fff;
+            padding: 12px 16px;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-        .sheet-table td { padding: 6px 16px; font-size: 0.9rem; vertical-align: middle; }
-        .sheet-table td:first-child { text-align: center; font-weight: 700; color: var(--muted); font-size: 0.8rem; }
+        .sheet-table thead th:first-child {
+            width: 50px;
+            text-align: center;
+        }
 
-        .cell-input { width: 100%; padding: 8px 12px; border: 1.5px solid transparent; border-radius: 6px; font-family: inherit; font-size: 0.92rem; background: transparent; outline: none; transition: all 0.2s; font-weight: 500; color: var(--text); }
-        .cell-input:focus { border-color: var(--secondary); background: #fff; box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
-        .cell-input::placeholder { color: #B0BEC5; font-weight: 400; }
+        .sheet-table thead th:nth-child(2) {
+            width: 35%;
+        }
 
-        .cell-link { font-size: 0.78rem; color: var(--muted); word-break: break-all; font-family: 'Courier New', monospace; padding: 4px 0; display: block; max-width: 450px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cell-link.has-link { color: var(--secondary); cursor: pointer; }
-        .cell-link.has-link:hover { text-decoration: underline; }
+        .sheet-table thead th:nth-child(3) {
+            width: auto;
+        }
 
-        .cell-actions { display: flex; gap: 6px; justify-content: center; }
-        .action-btn { width: 32px; height: 32px; border-radius: 6px; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; transition: all 0.2s; }
-        .action-btn.copy { background: rgba(27,58,107,0.08); color: var(--primary); }
-        .action-btn.copy:hover { background: var(--primary); color: #fff; }
-        .action-btn.wa { background: rgba(37,211,102,0.08); color: #25D366; }
-        .action-btn.wa:hover { background: #25D366; color: #fff; }
-        .action-btn.del { background: rgba(231,76,60,0.08); color: #E74C3C; }
-        .action-btn.del:hover { background: #E74C3C; color: #fff; }
+        .sheet-table thead th:nth-child(4) {
+            width: 200px;
+        }
 
-        .empty-row td { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
-        .empty-row i { font-size: 2rem; color: var(--secondary); opacity: 0.2; margin-bottom: 8px; display: block; }
+        .sheet-table thead th:last-child {
+            width: 140px;
+            text-align: center;
+        }
+
+        .cell-message {
+            font-size: 0.78rem;
+            color: var(--muted);
+            max-width: 190px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        .cell-message.has-message {
+            color: #25D366;
+            font-weight: 600;
+        }
+
+        .cell-message.has-message:hover {
+            text-decoration: underline;
+        }
+
+        .sheet-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+
+        .sheet-table tbody tr:nth-child(even) {
+            background: var(--row-alt);
+        }
+
+        .sheet-table tbody tr:hover {
+            background: #E8F0FE;
+        }
+
+        .sheet-table td {
+            padding: 6px 16px;
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+
+        .sheet-table td:first-child {
+            text-align: center;
+            font-weight: 700;
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .cell-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1.5px solid transparent;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            background: transparent;
+            outline: none;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .cell-input:focus {
+            border-color: var(--secondary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.1);
+        }
+
+        .cell-input::placeholder {
+            color: #B0BEC5;
+            font-weight: 400;
+        }
+
+        .cell-link {
+            font-size: 0.78rem;
+            color: var(--muted);
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            padding: 4px 0;
+            display: block;
+            max-width: 450px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cell-link.has-link {
+            color: var(--secondary);
+            cursor: pointer;
+        }
+
+        .cell-link.has-link:hover {
+            text-decoration: underline;
+        }
+
+        .cell-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .action-btn.copy {
+            background: rgba(27, 58, 107, 0.08);
+            color: var(--primary);
+        }
+
+        .action-btn.copy:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .action-btn.wa {
+            background: rgba(37, 211, 102, 0.08);
+            color: #25D366;
+        }
+
+        .action-btn.wa:hover {
+            background: #25D366;
+            color: #fff;
+        }
+
+        .action-btn.del {
+            background: rgba(231, 76, 60, 0.08);
+            color: #E74C3C;
+        }
+
+        .action-btn.del:hover {
+            background: #E74C3C;
+            color: #fff;
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .empty-row i {
+            font-size: 2rem;
+            color: var(--secondary);
+            opacity: 0.2;
+            margin-bottom: 8px;
+            display: block;
+        }
 
         /* FOOTER INFO */
-        .info-section { margin-top: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
-        .info-section h3 { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 1.2rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-        .info-section p { font-size: 0.9rem; color: var(--muted); margin-bottom: 10px; }
-        .formula-box { background: #F0F4F8; border: 1px solid var(--border); border-left: 4px solid var(--accent); padding: 14px 18px; border-radius: 0 8px 8px 0; font-family: 'Courier New', monospace; font-size: 0.88rem; color: var(--primary); font-weight: 700; margin: 10px 0; overflow-x: auto; cursor: pointer; transition: background 0.2s; word-break: break-all; }
-        .formula-box:hover { background: #E8F0FE; }
+        .info-section {
+            margin-top: 24px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+        }
 
-        .sheet-url-section { margin-top: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
-        .sheet-url-section h3 { font-family: 'Playfair Display', serif; color: var(--primary); font-size: 1.2rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-        .sheet-url-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-        .sheet-url-row .config-group { flex: 1; min-width: 300px; }
-        .sheet-url-row .toolbar-btn { height: 42px; }
+        .info-section h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-section p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .formula-box {
+            background: #F0F4F8;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.88rem;
+            color: var(--primary);
+            font-weight: 700;
+            margin: 10px 0;
+            overflow-x: auto;
+            cursor: pointer;
+            transition: background 0.2s;
+            word-break: break-all;
+        }
+
+        .formula-box:hover {
+            background: #E8F0FE;
+        }
+
+        .sheet-url-section {
+            margin-top: 24px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .sheet-url-section h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sheet-url-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .sheet-url-row .config-group {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .sheet-url-row .toolbar-btn {
+            height: 42px;
+        }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
-            .sheet-table thead th:nth-child(3) { display: none; }
-            .sheet-table td:nth-child(3) { display: none; }
-            .config-bar { flex-direction: column; }
-            .sheet-toolbar { flex-direction: column; align-items: stretch; }
+            .sheet-table thead th:nth-child(3),
+            .sheet-table thead th:nth-child(4) {
+                display: none;
+            }
+
+            .sheet-table td:nth-child(3),
+            .sheet-table td:nth-child(4) {
+                display: none;
+            }
+
+            .config-bar {
+                flex-direction: column;
+            }
+
+            .sheet-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <div class="page-header">
@@ -129,13 +515,20 @@
         <div class="sheet-wrapper">
             <div class="sheet-toolbar">
                 <div class="left-actions">
-                    <button class="toolbar-btn primary" onclick="addRow()"><i class="fa-solid fa-plus"></i> Tambah Baris</button>
-                    <button class="toolbar-btn outline" onclick="addMultipleRows()"><i class="fa-solid fa-layer-group"></i> Tambah 10 Baris</button>
+                    <button class="toolbar-btn primary" onclick="addRow()"><i class="fa-solid fa-plus"></i> Tambah
+                        Baris</button>
+                    <button class="toolbar-btn outline" onclick="addMultipleRows()"><i
+                            class="fa-solid fa-layer-group"></i> Tambah 10 Baris</button>
                 </div>
                 <div class="right-actions">
-                    <button class="toolbar-btn success" onclick="copyAllLinks()"><i class="fa-solid fa-copy"></i> Salin Semua Link</button>
-                    <button class="toolbar-btn outline" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
-                    <button class="toolbar-btn danger" onclick="clearAll()"><i class="fa-solid fa-trash-can"></i> Hapus Semua</button>
+                    <button class="toolbar-btn success" onclick="copyAllMessages()"><i class="fa-brands fa-whatsapp"></i> Salin
+                        Semua Pesan</button>
+                    <button class="toolbar-btn outline" onclick="copyAllLinks()"><i class="fa-solid fa-copy"></i> Salin
+                        Semua Link</button>
+                    <button class="toolbar-btn outline" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i>
+                        Export CSV</button>
+                    <button class="toolbar-btn danger" onclick="clearAll()"><i class="fa-solid fa-trash-can"></i> Hapus
+                        Semua</button>
                 </div>
             </div>
             <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
@@ -145,6 +538,7 @@
                             <th>No</th>
                             <th><i class="fa-solid fa-user"></i> Nama Tamu</th>
                             <th><i class="fa-solid fa-link"></i> Link Undangan</th>
+                            <th><i class="fa-brands fa-whatsapp"></i> Preview Pesan WA</th>
                             <th><i class="fa-solid fa-gear"></i> Aksi</th>
                         </tr>
                     </thead>
@@ -158,29 +552,37 @@
         <!-- GOOGLE SHEETS FORMULA INFO -->
         <div class="info-section">
             <h3><i class="fa-solid fa-table"></i> Cara Otomatis dengan Google Sheets</h3>
-            <p>Jika Anda memiliki daftar nama tamu di Google Sheets (misal kolom <strong>A</strong>), masukkan rumus ini di kolom <strong>B</strong> untuk membuat link otomatis:</p>
-            <div class="formula-box" id="formula-display" onclick="copyFormula()" title="Klik untuk menyalin rumus">=CONCATENATE("https://domain.com/index.html?to=", ENCODEURL(A2))</div>
-            <p style="font-size: 0.8rem; font-style: italic;">💡 Klik rumus di atas untuk menyalin. Tarik ke bawah untuk membuat link bagi semua baris tamu Anda.</p>
+            <p>Jika Anda memiliki daftar nama tamu di Google Sheets (misal kolom <strong>A</strong>), masukkan rumus ini
+                di kolom <strong>B</strong> untuk membuat link otomatis:</p>
+            <div class="formula-box" id="formula-display" onclick="copyFormula()" title="Klik untuk menyalin rumus">
+                =CONCATENATE("https://domain.com/index.html?to=", ENCODEURL(A2))</div>
+            <p style="font-size: 0.8rem; font-style: italic;">💡 Klik rumus di atas untuk menyalin. Tarik ke bawah untuk
+                membuat link bagi semua baris tamu Anda.</p>
         </div>
 
         <!-- GOOGLE SHEET URL CONFIG -->
         <div class="sheet-url-section">
             <h3><i class="fa-solid fa-database"></i> Koneksi ke Google Sheets (RSVP)</h3>
-            <p style="font-size: 0.88rem; color: var(--muted);">Masukkan URL Web App Google Apps Script Anda agar ucapan tamu dari form RSVP langsung tersimpan ke Google Sheets Anda. Lihat petunjuk lengkap di berkas <strong>google_sheets_setup.md</strong>.</p>
+            <p style="font-size: 0.88rem; color: var(--muted);">Masukkan URL Web App Google Apps Script Anda agar ucapan
+                tamu dari form RSVP langsung tersimpan ke Google Sheets Anda. Lihat petunjuk lengkap di berkas
+                <strong>google_sheets_setup.md</strong>.</p>
             <div class="sheet-url-row">
                 <div class="config-group">
                     <label>URL Web App Google Apps Script</label>
                     <input type="text" id="sheet-url" placeholder="https://script.google.com/macros/s/xxxx/exec">
                 </div>
-                <button class="toolbar-btn primary" onclick="saveSheetUrl()" style="height: 42px;"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+                <button class="toolbar-btn primary" onclick="saveSheetUrl()" style="height: 42px;"><i
+                        class="fa-solid fa-floppy-disk"></i> Simpan</button>
             </div>
         </div>
 
         <!-- RESET WISHES SECTION -->
         <div class="sheet-url-section" style="margin-top: 24px;">
             <h3><i class="fa-solid fa-comments"></i> Kelola Doa & Ucapan</h3>
-            <p style="font-size: 0.88rem; color: var(--muted);">Hapus semua ucapan uji coba yang tersimpan di browser ini agar daftar ucapan kosong kembali.</p>
-            <button class="toolbar-btn danger" onclick="clearWishes()"><i class="fa-solid fa-trash-can"></i> Hapus Semua Doa & Ucapan</button>
+            <p style="font-size: 0.88rem; color: var(--muted);">Hapus semua ucapan uji coba yang tersimpan di browser
+                ini agar daftar ucapan kosong kembali.</p>
+            <button class="toolbar-btn danger" onclick="clearWishes()"><i class="fa-solid fa-trash-can"></i> Hapus Semua
+                Doa & Ucapan</button>
         </div>
     </div>
 
@@ -225,11 +627,13 @@
             const tr = document.createElement('tr');
             tr.dataset.row = rowCounter;
             const num = tbody.children.length + 1;
+            const msgPreview = prefill ? '✉️ Klik untuk salin...' : '—';
 
             tr.innerHTML = `
                 <td>${num}</td>
                 <td><input class="cell-input" type="text" placeholder="Ketik nama tamu..." value="${escapeHTML(prefill)}" oninput="onNameChange(this)"></td>
                 <td><span class="cell-link ${prefill ? 'has-link' : ''}" onclick="openLink(this)">${prefill ? buildLink(prefill) : '—'}</span></td>
+                <td><span class="cell-message ${prefill ? 'has-message' : ''}" onclick="copyRowMessage(this)" title="Klik untuk salin pesan WA">${prefill ? '✉️ Klik untuk salin...' : '—'}</span></td>
                 <td>
                     <div class="cell-actions">
                         <button class="action-btn copy" title="Salin Link" onclick="copyRowLink(this)"><i class="fa-solid fa-copy"></i></button>
@@ -252,13 +656,18 @@
         function onNameChange(input) {
             const tr = input.closest('tr');
             const linkSpan = tr.querySelector('.cell-link');
+            const msgSpan = tr.querySelector('.cell-message');
             const name = input.value.trim();
             if (name) {
                 linkSpan.textContent = buildLink(name);
                 linkSpan.classList.add('has-link');
+                msgSpan.textContent = '✉️ Klik untuk salin...';
+                msgSpan.classList.add('has-message');
             } else {
                 linkSpan.textContent = '—';
                 linkSpan.classList.remove('has-link');
+                msgSpan.textContent = '—';
+                msgSpan.classList.remove('has-message');
             }
             saveData();
         }
@@ -281,16 +690,35 @@
             });
         }
 
+        function buildMessage(name, link) {
+            return `Yth. ${name},\n\n Assalamualaikum Wr. Wb \n\n Dengan memohon Rahmat Dan Ridho Allah SWT, Dan tanpa mengurangi rasa hormat kami. melalui media sosial ini, kami (nama mempelai) mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami. \n\n Detail undangan dan konfirmasi kehadiran dapat diakses melalui link berikut:\n\n${link}\n\n Merupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami \n\n Terima kasih kami sampaikan Bapak/Ibu/Sdr/i. \n\n Wassalamualaikum Wr.Wb.`;
+        }
+
         function sendWA(btn) {
             const tr = btn.closest('tr');
             const name = tr.querySelector('.cell-input').value.trim();
-            const link = tr.querySelector('.cell-link').textContent;
-            if (!name || link === '—') {
-                Swal.fire({ icon: 'warning', title: 'Nama kosong!', confirmButtonColor: '#1B3A6B' });
+            const link = tr.querySelector('.cell-link').textContent.trim();
+            if (!name || !link || link === '—') {
+                Swal.fire({ icon: 'warning', title: 'Nama kosong!', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
                 return;
             }
-            const msg = `Yth. *${name}*,\n\n Assalamualaikum Wr. Wb \n\n Dengan memohon Rahmat Dan Ridho Allah SWT, Dan tanpa mengurangi rasa hormat kami. melalui media sosial ini, kami (*nama mempelai*) mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami. \n\n *Detail undangan dan konfirmasi kehadiran dapat diakses melalui link berikut*:\n\n${link}\n\n Merupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami \n\n Terima kasih kami sampaikan Bapak/Ibu/Sdr/i. \n\n Wassalamualaikum Wr.Wb.`;
-            window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+            const msg = buildMessage(name, link);
+            const waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
+            window.open(waUrl, '_blank');
+        }
+
+        function copyRowMessage(span) {
+            const tr = span.closest('tr');
+            const name = tr.querySelector('.cell-input').value.trim();
+            const link = tr.querySelector('.cell-link').textContent.trim();
+            if (!name || !link || link === '—') {
+                Swal.fire({ icon: 'warning', title: 'Nama kosong!', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
+                return;
+            }
+            const msg = buildMessage(name, link);
+            navigator.clipboard.writeText(msg).then(() => {
+                Swal.fire({ icon: 'success', title: 'Pesan disalin!', text: 'Tempel pesan di WhatsApp atau media lainnya.', timer: 1800, showConfirmButton: false });
+            });
         }
 
         function deleteRow(btn) {
@@ -331,7 +759,7 @@
             const links = [];
             rows.forEach(row => {
                 const name = row.querySelector('.cell-input').value.trim();
-                const link = row.querySelector('.cell-link').textContent;
+                const link = row.querySelector('.cell-link').textContent.trim();
                 if (name && link !== '—') links.push(`${name}\t${link}`);
             });
             if (links.length === 0) {
@@ -340,6 +768,27 @@
             }
             navigator.clipboard.writeText(links.join('\n')).then(() => {
                 Swal.fire({ icon: 'success', title: `${links.length} link disalin!`, text: 'Format: Nama [TAB] Link, bisa langsung di-paste ke Spreadsheet.', confirmButtonColor: '#1B3A6B' });
+            });
+        }
+
+        function copyAllMessages() {
+            const rows = document.querySelectorAll('#sheet-body tr');
+            const messages = [];
+            rows.forEach(row => {
+                const name = row.querySelector('.cell-input').value.trim();
+                const link = row.querySelector('.cell-link').textContent.trim();
+                if (name && link && link !== '—') {
+                    messages.push('=== ' + name + ' ===');
+                    messages.push(buildMessage(name, link));
+                    messages.push('');
+                }
+            });
+            if (messages.length === 0) {
+                Swal.fire({ icon: 'info', title: 'Belum ada data', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
+                return;
+            }
+            navigator.clipboard.writeText(messages.join('\n')).then(() => {
+                Swal.fire({ icon: 'success', title: 'Semua pesan disalin!', text: `${messages.filter(m => m.startsWith('===')).length} pesan tamu berhasil disalin.`, confirmButtonColor: '#1B3A6B' });
             });
         }
 
@@ -412,8 +861,9 @@
         }
 
         function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":"&#39;", '"':'&quot;' }[tag]));
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": "&#39;", '"': '&quot;' }[tag]));
         }
     </script>
 </body>
+
 </html>
