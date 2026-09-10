@@ -1,7 +1,5 @@
-// CONFIGURATION UNDANGAN DIGITAL
-// Anda bisa mengubah isi di bawah ini dengan mudah tanpa perlu mengubah file HTML/JS lainnya.
 
-const weddingConfig = {
+var weddingConfig = {
     // 1. NAMA MEMPELAI
     mempelaiPria: "Aldi",
     mempelaiPriaShort: "Aldi",
