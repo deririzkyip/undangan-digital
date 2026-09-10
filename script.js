@@ -138,9 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 4. COUNTDOWN TIMER
-    const targetDateStr = (window.weddingConfig && window.weddingConfig.countdownDate) 
-        ? window.weddingConfig.countdownDate 
-        : "September 12, 2026 08:00:00";
+    const targetDateStr = (window.weddingConfig && window.weddingConfig.countdownDate)
+        ? window.weddingConfig.countdownDate
+        : "September 27, 2026 08:00:00";
     const targetDate = new Date(targetDateStr).getTime();
 
     const updateCountdown = () => {
@@ -226,12 +226,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 7. LIGHTBOX GALLERY
     const galleryImages = [
-        "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=600",
-        "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?q=80&w=600",
-        "https://images.unsplash.com/photo-1519225495810-7517c24a2828?q=80&w=600",
-        "https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=600",
-        "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?q=80&w=600",
-        "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?q=80&w=600"
+        "https://res.cloudinary.com/aqry5h7i/image/upload/v1789046276/SNOW_20260907_160756_314.jpg.jpg",
+        "https://res.cloudinary.com/aqry5h7i/image/upload/v1789046274/SNOW_20260907_195130_086.jpg.jpg",
+        "https://res.cloudinary.com/aqry5h7i/image/upload/v1789046270/SNOW_20260907_201137_130.jpg.jpg",
+        "https://res.cloudinary.com/aqry5h7i/image/upload/v1789046267/SNOW_20260907_160356_984.jpg.jpg",
+        "https://res.cloudinary.com/aqry5h7i/image/upload/v1789046262/SNOW_20260907_200259_511.jpg.jpg",
+        "https://res.cloudinary.com/aqry5h7i/image/upload/v1789046261/SNOW_20260907_201925_458.jpg.jpg"
     ];
     let currentImgIdx = 0;
 
@@ -286,8 +286,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }[tag] || tag));
     };
 
-    const renderWishes = () => {
-        const wishes = getWishes();
+    const normalizeWish = (wish) => {
+        if (!wish || typeof wish !== 'object') return null;
+        const wishName = wish.name || wish.nama || wish.Nama || '';
+        const wishAttendance = wish.attendance || wish.kehadiran || wish.Kehadiran || 'Hadir';
+        const wishGuests = wish.guests || wish.jumlah_tamu || wish.Jumlah_Tamu || 1;
+        const wishMessage = wish.message || wish.ucapan || wish.Ucapan || '';
+        const wishTime = wish.time || wish.tanggal || wish.Tanggal || new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        return {
+            name: String(wishName),
+            attendance: String(wishAttendance),
+            guests: Number(wishGuests),
+            message: String(wishMessage),
+            time: String(wishTime)
+        };
+    };
+
+    const fetchSheetWishes = async () => {
+        const sheetUrl = localStorage.getItem('google_sheet_url') || '';
+        if (!sheetUrl) return [];
+
+        try {
+            const response = await fetch(sheetUrl, { method: 'GET' });
+            if (!response.ok) return [];
+
+            const payload = await response.json();
+            let rows = [];
+
+            if (Array.isArray(payload)) {
+                rows = payload;
+            } else if (Array.isArray(payload.items)) {
+                rows = payload.items;
+            } else if (Array.isArray(payload.data)) {
+                rows = payload.data;
+            } else if (payload.result === 'success' && Array.isArray(payload.data)) {
+                rows = payload.data;
+            }
+
+            return rows.map(normalizeWish).filter(Boolean);
+        } catch (err) {
+            console.warn('Gagal mengambil ucapan dari Google Sheets:', err);
+            return [];
+        }
+    };
+
+    const renderWishes = (wishes = getWishes()) => {
         wishesCount.textContent = wishes.length;
 
         if (wishes.length === 0) {
@@ -347,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('kehadiran', attendance);
                     formData.append('jumlah_tamu', guests);
                     formData.append('ucapan', message);
-                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData.toString() });
+                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData.toString() });
                     sheetOk = true;
                 } catch (err) { console.error("Gagal kirim ke Sheets:", err); }
             }
@@ -373,5 +417,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    renderWishes();
+    const loadWishesFromSheet = async () => {
+        const remoteWishes = await fetchSheetWishes();
+        const localWishes = getWishes();
+        const mergedWishes = [...remoteWishes, ...localWishes];
+        renderWishes(mergedWishes);
+    };
+
+    loadWishesFromSheet();
 });
