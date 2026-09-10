@@ -229,9 +229,13 @@
             gap: 4px;
             border-bottom: 2px solid var(--border);
             margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
         }
+        .tab-bar::-webkit-scrollbar { display: none; }
         .tab-btn {
-            padding: 10px 20px;
+            padding: 10px 18px;
             font-size: 0.85rem;
             font-weight: 700;
             border: none;
@@ -246,6 +250,9 @@
             align-items: center;
             gap: 6px;
             border-radius: 6px 6px 0 0;
+            white-space: nowrap;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
         }
         .tab-btn:hover { color: var(--primary); background: rgba(27,58,107,0.04); }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(27,58,107,0.06); }
@@ -486,14 +493,160 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        @media (max-width: 768px) {
-            .sheet-table thead th:nth-child(3),
-            .sheet-table thead th:nth-child(4) { display: none; }
-            .sheet-table td:nth-child(3),
-            .sheet-table td:nth-child(4) { display: none; }
-            .config-bar { flex-direction: column; }
-            .sheet-toolbar { flex-direction: column; align-items: stretch; }
-            .gs-url-row { flex-direction: column; }
+        /* ─── FLOATING ADD BUTTON (mobile) ─── */
+        .fab-add {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 20px;
+            z-index: 999;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            font-size: 1.4rem;
+            box-shadow: 0 6px 20px rgba(27,58,107,0.35);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .fab-add:active { transform: scale(0.93); box-shadow: 0 3px 10px rgba(27,58,107,0.25); }
+
+        /* ─── RESPONSIVE: TABLET 768px ─── */
+        @media (max-width: 900px) {
+            .main-container { padding: 20px 14px; }
+            .stats-bar { gap: 10px; }
+            .stat-item { min-width: 120px; padding: 12px 14px; gap: 10px; }
+            .stat-value { font-size: 1.2rem; }
+            .export-grid { grid-template-columns: repeat(2, 1fr); }
+            .gs-btn-group { flex-direction: column; width: 100%; }
+            .gs-btn-group .toolbar-btn { width: 100%; justify-content: center; }
+        }
+
+        /* ─── RESPONSIVE: MOBILE 600px ─── */
+        @media (max-width: 600px) {
+            /* Header */
+            .page-header { padding: 22px 16px; }
+            .page-header h1 { font-size: 1.35rem; }
+            .page-header p { font-size: 0.82rem; }
+
+            /* Container */
+            .main-container { padding: 14px 12px; }
+
+            /* Status Banner */
+            .status-banner { font-size: 0.8rem; padding: 10px 14px; }
+
+            /* Stats: 3 columns in one row */
+            .stats-bar { gap: 8px; }
+            .stat-item { min-width: 0; flex: 1; padding: 10px 10px; gap: 8px; flex-direction: column; align-items: center; text-align: center; }
+            .stat-icon { width: 34px; height: 34px; font-size: 0.95rem; }
+            .stat-value { font-size: 1.3rem; }
+            .stat-label { font-size: 0.68rem; }
+
+            /* GS Section */
+            .gs-section { padding: 16px 14px; }
+            .gs-section h3 { font-size: 1rem; }
+            .gs-section > p { font-size: 0.8rem; }
+            .gs-url-row { flex-direction: column; gap: 12px; }
+            .gs-url-row .config-group { min-width: 100%; }
+            .gs-btn-group { flex-direction: row; width: 100%; }
+            .gs-btn-group .toolbar-btn { flex: 1; justify-content: center; height: 44px !important; font-size: 0.8rem; }
+
+            /* Config Bar */
+            .config-bar { padding: 14px; flex-direction: column; gap: 12px; }
+            .config-group { min-width: 100%; }
+            .config-group input, .config-group textarea { font-size: 16px; } /* prevent iOS zoom */
+
+            /* Tabs */
+            .tab-bar { gap: 0; }
+            .tab-btn { padding: 9px 14px; font-size: 0.78rem; gap: 4px; }
+            .tab-btn .badge { display: none; } /* hide badges on mobile */
+
+            /* Toolbar */
+            .sheet-toolbar { padding: 10px 12px; flex-direction: column; gap: 8px; }
+            .sheet-toolbar .left-actions,
+            .sheet-toolbar .right-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+            .sheet-toolbar .left-actions .toolbar-btn,
+            .sheet-toolbar .right-actions .toolbar-btn { justify-content: center; font-size: 0.76rem; padding: 8px 6px; }
+
+            /* Table → Card layout on mobile */
+            .sheet-table thead { display: none; }
+            .sheet-table tbody tr {
+                display: flex;
+                flex-direction: column;
+                padding: 12px 14px;
+                border-bottom: none;
+                margin-bottom: 8px;
+                border-radius: 10px;
+                border: 1px solid var(--border);
+                background: var(--card);
+                box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+            }
+            .sheet-table tbody tr:nth-child(even) { background: var(--card); }
+            .sheet-table td { padding: 4px 0; display: block; }
+            .sheet-table td:first-child {
+                display: none; /* hide row number on mobile */
+            }
+            .sheet-table td:nth-child(2) { order: 1; }
+            .sheet-table td:nth-child(3) {
+                order: 3;
+                font-size: 0.74rem;
+            }
+            .sheet-table td:nth-child(4) {
+                order: 2;
+                font-size: 0.78rem;
+            }
+            .sheet-table td:last-child { order: 4; padding-top: 8px; }
+            .cell-input { font-size: 15px; border: 1.5px solid var(--border); background: var(--bg); border-radius: 8px; padding: 9px 12px; }
+            .cell-link { max-width: 100%; white-space: normal; word-break: break-all; line-height: 1.4; }
+            .cell-actions { justify-content: flex-start; gap: 8px; }
+            .action-btn { width: 38px; height: 38px; font-size: 0.95rem; }
+
+            /* Table scroll wrapper */
+            .table-scroll-wrap { overflow: unset; max-height: unset; }
+
+            /* Info section */
+            .info-section { padding: 16px 14px; }
+            .info-section h3 { font-size: 1rem; }
+
+            /* Formula box */
+            .formula-box { font-size: 0.76rem; padding: 10px 12px; }
+
+            /* Formula row: stack vertically */
+            .formula-row { flex-direction: column !important; gap: 8px !important; }
+            .formula-row .toolbar-btn { width: 100%; justify-content: center; }
+
+            /* Export grid: 1 column */
+            .export-grid { grid-template-columns: 1fr; gap: 10px; }
+            .export-card { padding: 14px; }
+
+            /* Drop zone */
+            .drop-zone { padding: 20px 14px; }
+
+            /* Import textarea */
+            #name-import-box { font-size: 16px !important; }
+
+            /* Import actions */
+            .import-actions { flex-direction: column; gap: 8px; }
+            .import-actions .toolbar-btn { width: 100%; justify-content: center; }
+
+            /* FAB add button */
+            .fab-add { display: flex; }
+
+            /* Bottom padding for FAB */
+            body { padding-bottom: 80px; }
+        }
+
+        /* ─── RESPONSIVE: SMALL PHONE 380px ─── */
+        @media (max-width: 380px) {
+            .page-header h1 { font-size: 1.15rem; }
+            .tab-btn { padding: 8px 10px; font-size: 0.72rem; }
+            .toolbar-btn { font-size: 0.72rem; padding: 7px 8px; }
+            .stat-value { font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -602,7 +755,7 @@
                         <button class="toolbar-btn danger" onclick="clearAll()"><i class="fa-solid fa-trash-can"></i> Hapus Semua</button>
                     </div>
                 </div>
-                <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+                <div class="table-scroll-wrap" style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
                     <table class="sheet-table">
                         <thead>
                             <tr>
@@ -702,14 +855,14 @@
                 <p>Jika Anda memiliki daftar nama tamu di Google Sheets (kolom <strong>A</strong> = nama tamu), gunakan dua rumus berikut:</p>
 
                 <p style="margin-top:14px;"><strong>&#128204; Kolom B — Rumus Link Undangan:</strong></p>
-                <div style="display:flex; gap:10px; align-items:stretch; margin:6px 0;">
+                <div class="formula-row" style="display:flex; gap:10px; align-items:stretch; margin:6px 0;">
                     <div class="formula-box" id="formula-display" style="flex:1; margin:0; cursor:default;"></div>
                     <button class="toolbar-btn primary" onclick="copyLinkFormula()" style="white-space:nowrap; align-self:stretch;"><i class="fa-solid fa-copy"></i> Salin Rumus</button>
                 </div>
                 <p style="font-size:0.8rem; font-style:italic; margin-bottom:18px;">Paste di kolom <strong>B2</strong>, lalu tarik ke bawah untuk semua baris tamu.</p>
 
                 <p><strong>&#128172; Kolom C — Rumus Teks Pesan WA Lengkap:</strong></p>
-                <div style="display:flex; gap:10px; align-items:stretch; margin:6px 0;">
+                <div class="formula-row" style="display:flex; gap:10px; align-items:stretch; margin:6px 0;">
                     <div class="formula-box" id="formula-message" style="flex:1; margin:0; cursor:default; font-size:0.75rem; word-break:break-all;">loading...</div>
                     <button class="toolbar-btn success" onclick="copyMessageFormula()" style="white-space:nowrap; align-self:stretch;"><i class="fa-solid fa-copy"></i> Salin Rumus</button>
                 </div>
@@ -723,6 +876,9 @@
             <p style="font-size:0.88rem; color:var(--muted);">Hapus semua ucapan uji coba yang tersimpan di browser ini agar daftar ucapan kosong kembali.</p>
             <button class="toolbar-btn danger" onclick="clearWishes()"><i class="fa-solid fa-trash-can"></i> Hapus Semua Doa &amp; Ucapan</button>
         </div>
+
+        <!-- FAB: Tambah Baris (mobile) -->
+        <button class="fab-add" onclick="addRow(); switchTabToTable();" title="Tambah Tamu"><i class="fa-solid fa-plus"></i></button>
 
     </div>
 
@@ -778,6 +934,11 @@
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById('pane-' + tabId).classList.add('active');
+        }
+
+        function switchTabToTable() {
+            const tableTabBtn = document.querySelector('.tab-btn:first-child');
+            if (tableTabBtn) switchTab('table', tableTabBtn);
         }
 
         // ─────────────────────────────────────────────
