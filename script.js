@@ -322,13 +322,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (GOOGLE_SCRIPT_URL) {
                 try {
-                    const formData = new URLSearchParams();
-                    formData.append('nama', name);
-                    formData.append('kehadiran', attendance);
-                    formData.append('jumlah_tamu', guests);
-                    formData.append('ucapan', message);
-                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: formData });
+                    const hiddenForm = document.createElement('form');
+                    hiddenForm.method = 'POST';
+                    hiddenForm.action = GOOGLE_SCRIPT_URL;
+                    hiddenForm.style.display = 'none';
+
+                    const iframe = document.createElement('iframe');
+                    iframe.name = 'hidden_iframe_rsvp';
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+                    hiddenForm.target = iframe.name;
+
+                    const fields = { nama: name, kehadiran: attendance, jumlah_tamu: guests, ucapan: message };
+                    for (const key in fields) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = fields[key];
+                        hiddenForm.appendChild(input);
+                    }
+
+                    document.body.appendChild(hiddenForm);
+                    hiddenForm.submit();
                     sheetOk = true;
+
+                    setTimeout(() => {
+                        hiddenForm.remove();
+                        iframe.remove();
+                    }, 5000);
                 } catch (err) { console.error("Gagal kirim ke Sheets:", err); }
             }
 
