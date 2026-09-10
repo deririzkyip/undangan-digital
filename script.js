@@ -1,5 +1,3 @@
-// LOGIKA UTAMA UNDANGAN DIGITAL - TEMA BIRU
-// Romeo & Juliet Wedding
 
 document.addEventListener('DOMContentLoaded', () => {
     // 0. DINAMISASI DARI CONFIG.JS
