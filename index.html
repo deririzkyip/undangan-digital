@@ -294,11 +294,9 @@
                                 <option value="Tidak Hadir">Tidak Hadir</option>
                             </select></div>
                         <div class="form-group"><label for="input-guests"><i class="fa-solid fa-users"></i> Jumlah
-                                Tamu</label><select id="input-guests">
-                                <option value="1">1 Orang</option>
-                                <option value="2">2 Orang</option>
-                                <option value="3">3 Orang</option>
-                            </select></div>
+                                Tamu</label><input type="number" id="input-guests" min="1" max="100" value="1" placeholder="Contoh: 1" required>
+                            <small style="display:block;margin-top:4px;color:#888;font-size:0.8em;">Ketik jumlah tamu yang hadir, contoh: 1</small>
+                        </div>
                         <div class="form-group"><label for="input-message"><i class="fa-solid fa-message"></i> Doa Restu
                                 & Ucapan</label><textarea id="input-message" rows="4"
                                 placeholder="Tuliskan ucapan dan doa terbaik Anda..." required></textarea></div>
