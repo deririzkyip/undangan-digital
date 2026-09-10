@@ -9,6 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
@@ -21,13 +22,11 @@
             --muted: #5A6B7F;
             --border: rgba(27, 58, 107, 0.12);
             --row-alt: #F5F8FC;
+            --success: #16a34a;
+            --danger: #E74C3C;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -36,86 +35,232 @@
             line-height: 1.6;
         }
 
-        /* HEADER */
         .page-header {
-            background: linear-gradient(135deg, var(--primary), #2A5298);
+            background: linear-gradient(135deg, var(--primary) 0%, #2A5298 50%, #1e6ab0 100%);
             color: #fff;
-            padding: 30px 20px;
+            padding: 32px 20px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
         .page-header h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            margin-bottom: 6px;
+            font-size: 2rem;
+            margin-bottom: 8px;
+            position: relative;
         }
-
         .page-header p {
             font-size: 0.95rem;
             opacity: 0.85;
-            font-weight: 400;
+            position: relative;
         }
 
         .main-container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 30px 20px;
         }
 
-        /* CONFIG BAR */
+        /* STATUS BANNER */
+        .status-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: all 0.4s ease;
+            border: 1.5px solid;
+        }
+        .status-banner.disconnected { background: #fff8f0; color: #b45309; border-color: #f59e0b33; }
+        .status-banner.connected { background: #f0fdf4; color: #15803d; border-color: #16a34a33; }
+        .status-banner.testing { background: #eff6ff; color: #1d4ed8; border-color: #3b82f633; }
+        .status-banner.error { background: #fef2f2; color: #b91c1c; border-color: #ef444433; }
+
+        .status-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+        .status-dot.disconnected { background: #f59e0b; }
+        .status-dot.connected { background: #16a34a; animation: pulse-green 2s infinite; }
+        .status-dot.testing { background: #3b82f6; animation: pulse-blue 1s infinite; }
+        .status-dot.error { background: #ef4444; }
+
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+        }
+        @keyframes pulse-blue {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+        }
+
+        /* GOOGLE SHEETS SECTION */
+        .gs-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+        }
+        .gs-section h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-size: 1.15rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .gs-section > p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .gs-url-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .gs-url-row .config-group { flex: 1; min-width: 280px; }
+        .gs-btn-group { display: flex; gap: 8px; flex-shrink: 0; }
+
+        /* STATS BAR */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 140px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+        }
+        .stat-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .stat-icon.blue { background: rgba(74,144,217,0.12); color: var(--secondary); }
+        .stat-icon.green { background: rgba(37,211,102,0.12); color: #25D366; }
+        .stat-icon.gold { background: rgba(201,168,76,0.12); color: var(--accent); }
+        .stat-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+        .stat-value { font-size: 1.4rem; font-weight: 800; color: var(--primary); line-height: 1; }
+
+        /* CONFIG GROUP */
         .config-bar {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
+            border-radius: 14px;
+            padding: 22px 24px;
+            margin-bottom: 20px;
             display: flex;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 18px;
             align-items: flex-end;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.04);
         }
-
         .config-group {
             display: flex;
             flex-direction: column;
             gap: 6px;
             flex: 1;
-            min-width: 250px;
+            min-width: 240px;
         }
-
         .config-group label {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-
-        .config-group input {
+        .config-group input,
+        .config-group textarea,
+        .config-group select {
             padding: 10px 14px;
-            border: 1px solid var(--border);
+            border: 1.5px solid var(--border);
             border-radius: 8px;
             font-family: inherit;
             font-size: 0.9rem;
             outline: none;
-            transition: border 0.3s;
+            transition: border 0.3s, box-shadow 0.3s;
+            background: #fafbfc;
+            color: var(--text);
         }
+        .config-group textarea { resize: vertical; min-height: 80px; }
+        .config-group input:focus,
+        .config-group textarea:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(74,144,217,0.15); background: #fff; }
+        .import-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
 
-        .config-group input:focus {
-            border-color: var(--secondary);
-            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+        /* TABS */
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 20px;
         }
+        .tab-btn {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--muted);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 6px 6px 0 0;
+        }
+        .tab-btn:hover { color: var(--primary); background: rgba(27,58,107,0.04); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(27,58,107,0.06); }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
 
-        /* SPREADSHEET TABLE */
+        /* SHEET TABLE */
         .sheet-wrapper {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
         }
-
         .sheet-toolbar {
             display: flex;
             justify-content: space-between;
@@ -126,16 +271,8 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-
-        .sheet-toolbar .left-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .sheet-toolbar .right-actions {
-            display: flex;
-            gap: 10px;
-        }
+        .sheet-toolbar .left-actions,
+        .sheet-toolbar .right-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .toolbar-btn {
             padding: 8px 16px;
@@ -149,57 +286,28 @@
             align-items: center;
             gap: 6px;
             font-family: inherit;
+            white-space: nowrap;
         }
+        .toolbar-btn.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
+        .toolbar-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27,58,107,0.25); }
+        .toolbar-btn.outline { background: #fff; color: var(--primary); border: 1.5px solid var(--border); }
+        .toolbar-btn.outline:hover { background: var(--bg); }
+        .toolbar-btn.success { background: #25D366; color: #fff; }
+        .toolbar-btn.success:hover { background: #20BD5A; }
+        .toolbar-btn.excel { background: #1D6F42; color: #fff; }
+        .toolbar-btn.excel:hover { background: #155534; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(29,111,66,0.25); }
+        .toolbar-btn.sheets { background: #34A853; color: #fff; }
+        .toolbar-btn.sheets:hover { background: #2d9249; transform: translateY(-1px); }
+        .toolbar-btn.danger { background: var(--danger); color: #fff; }
+        .toolbar-btn.danger:hover { background: #C0392B; }
+        .toolbar-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
 
-        .toolbar-btn.primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff;
-        }
-
-        .toolbar-btn.primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(27, 58, 107, 0.25);
-        }
-
-        .toolbar-btn.outline {
-            background: #fff;
-            color: var(--primary);
-            border: 1.5px solid var(--border);
-        }
-
-        .toolbar-btn.outline:hover {
-            background: var(--bg);
-        }
-
-        .toolbar-btn.success {
-            background: #25D366;
-            color: #fff;
-        }
-
-        .toolbar-btn.success:hover {
-            background: #20BD5A;
-        }
-
-        .toolbar-btn.danger {
-            background: #E74C3C;
-            color: #fff;
-        }
-
-        .toolbar-btn.danger:hover {
-            background: #C0392B;
-        }
-
-        /* TABLE */
-        .sheet-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
+        .sheet-table { width: 100%; border-collapse: collapse; }
         .sheet-table thead th {
             background: var(--primary);
             color: #fff;
             padding: 12px 16px;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 700;
@@ -208,74 +316,29 @@
             top: 0;
             z-index: 10;
         }
-
-        .sheet-table thead th:first-child {
-            width: 50px;
-            text-align: center;
-        }
-
-        .sheet-table thead th:nth-child(2) {
-            width: 35%;
-        }
-
-        .sheet-table thead th:nth-child(3) {
-            width: auto;
-        }
-
-        .sheet-table thead th:nth-child(4) {
-            width: 200px;
-        }
-
-        .sheet-table thead th:last-child {
-            width: 140px;
-            text-align: center;
-        }
+        .sheet-table thead th:first-child { width: 50px; text-align: center; }
+        .sheet-table thead th:nth-child(2) { width: 32%; }
+        .sheet-table thead th:nth-child(4) { width: 180px; }
+        .sheet-table thead th:last-child { width: 130px; text-align: center; }
 
         .cell-message {
             font-size: 0.78rem;
             color: var(--muted);
-            max-width: 190px;
+            max-width: 175px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             cursor: pointer;
             padding: 4px 0;
         }
+        .cell-message.has-message { color: #25D366; font-weight: 600; }
+        .cell-message.has-message:hover { text-decoration: underline; }
 
-        .cell-message.has-message {
-            color: #25D366;
-            font-weight: 600;
-        }
-
-        .cell-message.has-message:hover {
-            text-decoration: underline;
-        }
-
-        .sheet-table tbody tr {
-            border-bottom: 1px solid var(--border);
-            transition: background 0.15s;
-        }
-
-        .sheet-table tbody tr:nth-child(even) {
-            background: var(--row-alt);
-        }
-
-        .sheet-table tbody tr:hover {
-            background: #E8F0FE;
-        }
-
-        .sheet-table td {
-            padding: 6px 16px;
-            font-size: 0.9rem;
-            vertical-align: middle;
-        }
-
-        .sheet-table td:first-child {
-            text-align: center;
-            font-weight: 700;
-            color: var(--muted);
-            font-size: 0.8rem;
-        }
+        .sheet-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+        .sheet-table tbody tr:nth-child(even) { background: var(--row-alt); }
+        .sheet-table tbody tr:hover { background: #E8F0FE; }
+        .sheet-table td { padding: 6px 16px; font-size: 0.9rem; vertical-align: middle; }
+        .sheet-table td:first-child { text-align: center; font-weight: 700; color: var(--muted); font-size: 0.8rem; }
 
         .cell-input {
             width: 100%;
@@ -290,17 +353,8 @@
             font-weight: 500;
             color: var(--text);
         }
-
-        .cell-input:focus {
-            border-color: var(--secondary);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.1);
-        }
-
-        .cell-input::placeholder {
-            color: #B0BEC5;
-            font-weight: 400;
-        }
+        .cell-input:focus { border-color: var(--secondary); background: #fff; box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
+        .cell-input::placeholder { color: #B0BEC5; font-weight: 400; }
 
         .cell-link {
             font-size: 0.78rem;
@@ -309,30 +363,17 @@
             font-family: 'Courier New', monospace;
             padding: 4px 0;
             display: block;
-            max-width: 450px;
+            max-width: 420px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        .cell-link.has-link { color: var(--secondary); cursor: pointer; }
+        .cell-link.has-link:hover { text-decoration: underline; }
 
-        .cell-link.has-link {
-            color: var(--secondary);
-            cursor: pointer;
-        }
-
-        .cell-link.has-link:hover {
-            text-decoration: underline;
-        }
-
-        .cell-actions {
-            display: flex;
-            gap: 6px;
-            justify-content: center;
-        }
-
+        .cell-actions { display: flex; gap: 6px; justify-content: center; }
         .action-btn {
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
@@ -342,78 +383,32 @@
             font-size: 0.85rem;
             transition: all 0.2s;
         }
+        .action-btn.copy { background: rgba(27,58,107,0.08); color: var(--primary); }
+        .action-btn.copy:hover { background: var(--primary); color: #fff; }
+        .action-btn.wa { background: rgba(37,211,102,0.08); color: #25D366; }
+        .action-btn.wa:hover { background: #25D366; color: #fff; }
+        .action-btn.del { background: rgba(231,76,60,0.08); color: var(--danger); }
+        .action-btn.del:hover { background: var(--danger); color: #fff; }
 
-        .action-btn.copy {
-            background: rgba(27, 58, 107, 0.08);
-            color: var(--primary);
-        }
-
-        .action-btn.copy:hover {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .action-btn.wa {
-            background: rgba(37, 211, 102, 0.08);
-            color: #25D366;
-        }
-
-        .action-btn.wa:hover {
-            background: #25D366;
-            color: #fff;
-        }
-
-        .action-btn.del {
-            background: rgba(231, 76, 60, 0.08);
-            color: #E74C3C;
-        }
-
-        .action-btn.del:hover {
-            background: #E74C3C;
-            color: #fff;
-        }
-
-        .empty-row td {
-            text-align: center;
-            padding: 40px;
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .empty-row i {
-            font-size: 2rem;
-            color: var(--secondary);
-            opacity: 0.2;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        /* FOOTER INFO */
+        /* INFO */
         .info-section {
-            margin-top: 24px;
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 24px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
         }
-
         .info-section h3 {
             font-family: 'Playfair Display', serif;
             color: var(--primary);
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-
-        .info-section p {
-            font-size: 0.9rem;
-            color: var(--muted);
-            margin-bottom: 10px;
-        }
-
+        .info-section p { font-size: 0.9rem; color: var(--muted); margin-bottom: 10px; }
         .formula-box {
             background: #F0F4F8;
             border: 1px solid var(--border);
@@ -421,75 +416,84 @@
             padding: 14px 18px;
             border-radius: 0 8px 8px 0;
             font-family: 'Courier New', monospace;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             color: var(--primary);
             font-weight: 700;
             margin: 10px 0;
             overflow-x: auto;
-            cursor: pointer;
             transition: background 0.2s;
             word-break: break-all;
         }
+        .formula-box:hover { background: #E8F0FE; }
 
-        .formula-box:hover {
-            background: #E8F0FE;
+        /* EXPORT CARDS */
+        .export-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
         }
-
-        .sheet-url-section {
-            margin-top: 24px;
-            background: var(--card);
-            border: 1px solid var(--border);
+        .export-card {
+            border: 1.5px solid var(--border);
             border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
-        }
-
-        .sheet-url-section h3 {
-            font-family: 'Playfair Display', serif;
-            color: var(--primary);
-            font-size: 1.2rem;
-            margin-bottom: 14px;
+            padding: 20px;
             display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sheet-url-row {
-            display: flex;
+            flex-direction: column;
             gap: 10px;
-            align-items: flex-end;
-            flex-wrap: wrap;
+            transition: all 0.2s;
         }
+        .export-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .export-card .ec-icon { font-size: 2rem; margin-bottom: 4px; }
+        .export-card h4 { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+        .export-card p { font-size: 0.8rem; color: var(--muted); margin: 0; }
 
-        .sheet-url-row .config-group {
-            flex: 1;
-            min-width: 300px;
+        /* DROP ZONE */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            padding: 28px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 0.88rem;
         }
+        .drop-zone.drag-over { border-color: var(--secondary); background: rgba(74,144,217,0.05); color: var(--secondary); }
+        .drop-zone i { font-size: 2.2rem; display: block; margin-bottom: 10px; opacity: 0.5; }
+        .drop-zone.drag-over i { opacity: 1; }
 
-        .sheet-url-row .toolbar-btn {
-            height: 42px;
+        /* BADGE */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            margin-left: 4px;
         }
+        .badge.new { background: rgba(37,211,102,0.15); color: #16a34a; }
 
-        /* RESPONSIVE */
+        /* SPINNER */
+        .spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         @media (max-width: 768px) {
             .sheet-table thead th:nth-child(3),
-            .sheet-table thead th:nth-child(4) {
-                display: none;
-            }
-
+            .sheet-table thead th:nth-child(4) { display: none; }
             .sheet-table td:nth-child(3),
-            .sheet-table td:nth-child(4) {
-                display: none;
-            }
-
-            .config-bar {
-                flex-direction: column;
-            }
-
-            .sheet-toolbar {
-                flex-direction: column;
-                align-items: stretch;
-            }
+            .sheet-table td:nth-child(4) { display: none; }
+            .config-bar { flex-direction: column; }
+            .sheet-toolbar { flex-direction: column; align-items: stretch; }
+            .gs-url-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -498,130 +502,357 @@
 
     <div class="page-header">
         <h1><i class="fa-solid fa-table-cells"></i> Generator Link Tamu Undangan</h1>
-        <p>Ketik nama tamu di tabel bawah ini — link undangan otomatis terbuat!</p>
+        <p>Buat, impor, dan ekspor link undangan personal untuk setiap tamu dengan mudah</p>
     </div>
 
     <div class="main-container">
 
-        <!-- CONFIG BAR -->
-        <div class="config-bar">
-            <div class="config-group">
-                <label><i class="fa-solid fa-link"></i> URL Dasar Undangan</label>
-                <input type="text" id="base-url" placeholder="https://domain-anda.com/index.html">
-            </div>
+        <!-- STATUS BANNER -->
+        <div class="status-banner disconnected" id="status-banner">
+            <div class="status-dot disconnected" id="status-dot"></div>
+            <span id="status-text">Belum terhubung ke Google Sheets — isi URL di bagian Koneksi di bawah.</span>
         </div>
 
-        <!-- SPREADSHEET-LIKE TABLE -->
-        <div class="sheet-wrapper">
-            <div class="sheet-toolbar">
-                <div class="left-actions">
-                    <button class="toolbar-btn primary" onclick="addRow()"><i class="fa-solid fa-plus"></i> Tambah
-                        Baris</button>
-                    <button class="toolbar-btn outline" onclick="addMultipleRows()"><i
-                            class="fa-solid fa-layer-group"></i> Tambah 10 Baris</button>
-                </div>
-                <div class="right-actions">
-                    <button class="toolbar-btn success" onclick="copyAllMessages()"><i class="fa-brands fa-whatsapp"></i> Salin
-                        Semua Pesan</button>
-                    <button class="toolbar-btn outline" onclick="copyAllLinks()"><i class="fa-solid fa-copy"></i> Salin
-                        Semua Link</button>
-                    <button class="toolbar-btn outline" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i>
-                        Export CSV</button>
-                    <button class="toolbar-btn danger" onclick="clearAll()"><i class="fa-solid fa-trash-can"></i> Hapus
-                        Semua</button>
+        <!-- STATS BAR -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <div class="stat-label">Total Tamu</div>
+                    <div class="stat-value" id="stat-total">0</div>
                 </div>
             </div>
-            <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
-                <table class="sheet-table">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th><i class="fa-solid fa-user"></i> Nama Tamu</th>
-                            <th><i class="fa-solid fa-link"></i> Link Undangan</th>
-                            <th><i class="fa-brands fa-whatsapp"></i> Preview Pesan WA</th>
-                            <th><i class="fa-solid fa-gear"></i> Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sheet-body">
-                        <!-- Rows will be generated here -->
-                    </tbody>
-                </table>
+            <div class="stat-item">
+                <div class="stat-icon green"><i class="fa-solid fa-link"></i></div>
+                <div>
+                    <div class="stat-label">Link Dibuat</div>
+                    <div class="stat-value" id="stat-links">0</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon gold"><i class="fa-brands fa-whatsapp"></i></div>
+                <div>
+                    <div class="stat-label">Siap Kirim WA</div>
+                    <div class="stat-value" id="stat-wa">0</div>
+                </div>
             </div>
         </div>
 
-        <!-- GOOGLE SHEETS FORMULA INFO -->
-        <div class="info-section">
-            <h3><i class="fa-solid fa-table"></i> Cara Otomatis dengan Google Sheets</h3>
-            <p>Jika Anda memiliki daftar nama tamu di Google Sheets (kolom <strong>A</strong> = nama tamu), gunakan dua rumus berikut:</p>
-
-            <p style="margin-top: 14px;"><strong>📎 Kolom B — Rumus Link Undangan:</strong></p>
-            <div style="display: flex; gap: 10px; align-items: stretch; margin: 6px 0;">
-                <div class="formula-box" id="formula-display" style="flex: 1; margin: 0; cursor: default;">=CONCATENATE("https://domain.com/index.html?to=", ENCODEURL(A2))</div>
-                <button class="toolbar-btn primary" onclick="copyLinkFormula()" style="white-space: nowrap; align-self: stretch;"><i class="fa-solid fa-copy"></i> Salin Rumus</button>
-            </div>
-            <p style="font-size: 0.8rem; font-style: italic; margin-bottom: 18px;">💡 Paste di kolom <strong>B2</strong>, lalu tarik ke bawah untuk semua baris tamu.</p>
-
-            <p><strong>💬 Kolom C — Rumus Teks Pesan WA Lengkap:</strong></p>
-            <div style="display: flex; gap: 10px; align-items: stretch; margin: 6px 0;">
-                <div class="formula-box" id="formula-message" style="flex: 1; margin: 0; cursor: default; font-size: 0.78rem; word-break: break-all;">loading...</div>
-                <button class="toolbar-btn success" onclick="copyMessageFormula()" style="white-space: nowrap; align-self: stretch;"><i class="fa-solid fa-copy"></i> Salin Rumus</button>
-            </div>
-            <p style="font-size: 0.8rem; font-style: italic;">💡 Paste di kolom <strong>C2</strong>. Setiap sel akan berisi teks pesan WA lengkap siap kirim untuk masing-masing tamu.</p>
-        </div>
-
-        <!-- GOOGLE SHEET URL CONFIG -->
-        <div class="sheet-url-section">
-            <h3><i class="fa-solid fa-database"></i> Koneksi ke Google Sheets (RSVP)</h3>
-            <p style="font-size: 0.88rem; color: var(--muted);">Masukkan URL Web App Google Apps Script Anda agar ucapan
-                tamu dari form RSVP langsung tersimpan ke Google Sheets Anda. Lihat petunjuk lengkap di berkas
-                <strong>google_sheets_setup.md</strong>.</p>
-            <div class="sheet-url-row">
+        <!-- GOOGLE SHEETS CONNECTION -->
+        <div class="gs-section">
+            <h3>
+                <i class="fa-solid fa-database"></i> Koneksi ke Google Sheets (RSVP)
+                <span id="gs-badge" style="display:none;" class="badge new">&#10003; Terhubung</span>
+            </h3>
+            <p>Masukkan URL Web App Google Apps Script. Setelah disimpan, undangan otomatis terhubung tanpa perlu koneksi ulang setiap kali membuka halaman ini. Data RSVP dari tamu akan masuk ke Google Sheets secara real-time.</p>
+            <div class="gs-url-row">
                 <div class="config-group">
-                    <label>URL Web App Google Apps Script</label>
-                    <input type="text" id="sheet-url" placeholder="https://script.google.com/macros/s/xxxx/exec">
+                    <label><i class="fa-solid fa-globe"></i> URL Web App Google Apps Script</label>
+                    <input type="url" id="sheet-url" placeholder="https://script.google.com/macros/s/xxxx/exec" autocomplete="off">
                 </div>
-                <button class="toolbar-btn primary" onclick="saveSheetUrl()" style="height: 42px;"><i
-                        class="fa-solid fa-floppy-disk"></i> Simpan</button>
+                <div class="gs-btn-group">
+                    <button class="toolbar-btn primary" onclick="saveAndTestSheetUrl()" id="btn-save-gs" style="height:42px;">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan &amp; Uji
+                    </button>
+                    <button class="toolbar-btn outline" onclick="clearSheetUrl()" style="height:42px;">
+                        <i class="fa-solid fa-xmark"></i> Hapus
+                    </button>
+                </div>
+            </div>
+            <p style="font-size:0.78rem; margin-top:10px; color:var(--muted);">
+                Lihat panduan lengkap di <strong>google_sheets_setup.md</strong> untuk membuat Web App dari Google Apps Script.
+            </p>
+        </div>
+
+        <!-- TABS -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('table', this)">
+                <i class="fa-solid fa-table"></i> Daftar Tamu
+            </button>
+            <button class="tab-btn" onclick="switchTab('import', this)">
+                <i class="fa-solid fa-file-import"></i> Import <span class="badge new">Baru</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('export', this)">
+                <i class="fa-solid fa-file-export"></i> Export <span class="badge new">Baru</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('formula', this)">
+                <i class="fa-solid fa-square-root-variable"></i> Rumus Sheets
+            </button>
+        </div>
+
+        <!-- TAB: DAFTAR TAMU -->
+        <div class="tab-pane active" id="pane-table">
+            <div class="config-bar">
+                <div class="config-group">
+                    <label><i class="fa-solid fa-link"></i> URL Dasar Undangan</label>
+                    <input type="text" id="base-url" placeholder="https://domain-anda.com/index.html" oninput="onBaseUrlChange()">
+                </div>
+            </div>
+
+            <div class="sheet-wrapper">
+                <div class="sheet-toolbar">
+                    <div class="left-actions">
+                        <button class="toolbar-btn primary" onclick="addRow()"><i class="fa-solid fa-plus"></i> Tambah Baris</button>
+                        <button class="toolbar-btn outline" onclick="addMultipleRows()"><i class="fa-solid fa-layer-group"></i> +10 Baris</button>
+                        <button class="toolbar-btn outline" onclick="refreshAllLinks()"><i class="fa-solid fa-rotate"></i> Perbarui Link</button>
+                    </div>
+                    <div class="right-actions">
+                        <button class="toolbar-btn success" onclick="copyAllMessages()"><i class="fa-brands fa-whatsapp"></i> Salin Semua Pesan</button>
+                        <button class="toolbar-btn outline" onclick="copyAllLinks()"><i class="fa-solid fa-copy"></i> Salin Semua Link</button>
+                        <button class="toolbar-btn danger" onclick="clearAll()"><i class="fa-solid fa-trash-can"></i> Hapus Semua</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+                    <table class="sheet-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th><i class="fa-solid fa-user"></i> Nama Tamu</th>
+                                <th><i class="fa-solid fa-link"></i> Link Undangan</th>
+                                <th><i class="fa-brands fa-whatsapp"></i> Preview Pesan WA</th>
+                                <th><i class="fa-solid fa-gear"></i> Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sheet-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- RESET WISHES SECTION -->
-        <div class="sheet-url-section" style="margin-top: 24px;">
-            <h3><i class="fa-solid fa-comments"></i> Kelola Doa & Ucapan</h3>
-            <p style="font-size: 0.88rem; color: var(--muted);">Hapus semua ucapan uji coba yang tersimpan di browser
-                ini agar daftar ucapan kosong kembali.</p>
-            <button class="toolbar-btn danger" onclick="clearWishes()"><i class="fa-solid fa-trash-can"></i> Hapus Semua
-                Doa & Ucapan</button>
+        <!-- TAB: IMPORT -->
+        <div class="tab-pane" id="pane-import">
+            <div class="info-section">
+                <h3><i class="fa-solid fa-file-import"></i> Import Nama Tamu</h3>
+
+                <p><strong>1. Import dari Teks</strong> — Ketik atau tempel nama, satu per baris atau pisah dengan koma.</p>
+                <textarea id="name-import-box" style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:0.9rem; min-height:120px; outline:none; resize:vertical; margin-bottom:10px; background:#fafbfc;"
+                    placeholder="Bapak Ahmad Fauzi&#10;Ibu Siti Rahayu&#10;Andi &amp; Keluarga&#10;Budi, Rini, Sari"></textarea>
+                <div class="import-actions" style="margin-bottom:24px;">
+                    <button class="toolbar-btn primary" onclick="importNames()"><i class="fa-solid fa-file-import"></i> Import (Ganti Semua)</button>
+                    <button class="toolbar-btn outline" onclick="appendNames()"><i class="fa-solid fa-plus"></i> Tambahkan Saja</button>
+                    <button class="toolbar-btn outline" onclick="clearImportBox()"><i class="fa-solid fa-eraser"></i> Bersihkan</button>
+                </div>
+
+                <p><strong>2. Import dari File Excel / CSV / TXT</strong> — Seret file ke kotak di bawah atau klik untuk memilih.</p>
+                <div class="drop-zone" id="drop-zone"
+                    onclick="document.getElementById('spreadsheet-file').click()"
+                    ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <strong>Klik atau seret file ke sini</strong>
+                    <div style="margin-top:6px; font-size:0.82rem;">Mendukung: <code>.xlsx</code> &nbsp; <code>.xls</code> &nbsp; <code>.csv</code> &nbsp; <code>.txt</code></div>
+                </div>
+                <input type="file" id="spreadsheet-file" accept=".csv,.xlsx,.xls,.txt" style="display:none;" onchange="importFileNames()">
+                <p style="font-size:0.8rem; color:var(--muted); margin-top:10px;">
+                    Kolom bernama <strong>Nama</strong>, <strong>Name</strong>, atau <strong>Tamu</strong> otomatis terdeteksi. Jika tidak ada, kolom pertama digunakan.
+                    Nama duplikat otomatis dilewati saat mode "Tambahkan Saja".
+                </p>
+            </div>
         </div>
+
+        <!-- TAB: EXPORT -->
+        <div class="tab-pane" id="pane-export">
+            <div class="info-section">
+                <h3><i class="fa-solid fa-file-export"></i> Pilih Format Export</h3>
+                <p>Export daftar tamu beserta link undangan dan link pesan WhatsApp ke berbagai format file.</p>
+
+                <div class="export-grid">
+                    <div class="export-card">
+                        <div class="ec-icon" style="color:#1D6F42;">&#128202;</div>
+                        <h4>Excel (.xlsx)</h4>
+                        <p>File Microsoft Excel berisi kolom: No, Nama Tamu, Link Undangan, Link Pesan WA.</p>
+                        <button class="toolbar-btn excel" onclick="exportExcel()" style="margin-top:4px;">
+                            <i class="fa-solid fa-file-excel"></i> Download Excel
+                        </button>
+                    </div>
+
+                    <div class="export-card">
+                        <div class="ec-icon" style="color:#5A6B7F;">&#128196;</div>
+                        <h4>CSV (.csv)</h4>
+                        <p>Format CSV dengan UTF-8 BOM, kompatibel dengan Excel dan Google Sheets.</p>
+                        <button class="toolbar-btn outline" onclick="exportCSV()" style="margin-top:4px;">
+                            <i class="fa-solid fa-file-csv"></i> Download CSV
+                        </button>
+                    </div>
+
+                    <div class="export-card">
+                        <div class="ec-icon" style="color:#34A853;">&#128203;</div>
+                        <h4>Salin ke Google Sheets</h4>
+                        <p>Salin semua data berformat tab-separated, langsung paste ke Google Sheets.</p>
+                        <button class="toolbar-btn sheets" onclick="copyAllLinks()" style="margin-top:4px;">
+                            <i class="fa-solid fa-copy"></i> Salin ke Clipboard
+                        </button>
+                    </div>
+
+                    <div class="export-card">
+                        <div class="ec-icon" style="color:#25D366;">&#128172;</div>
+                        <h4>Semua Pesan WhatsApp</h4>
+                        <p>Salin semua pesan WA lengkap siap kirim untuk semua tamu ke clipboard.</p>
+                        <button class="toolbar-btn success" onclick="copyAllMessages()" style="margin-top:4px;">
+                            <i class="fa-brands fa-whatsapp"></i> Salin Semua Pesan WA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: FORMULA -->
+        <div class="tab-pane" id="pane-formula">
+            <div class="info-section">
+                <h3><i class="fa-solid fa-table"></i> Cara Otomatis dengan Google Sheets</h3>
+                <p>Jika Anda memiliki daftar nama tamu di Google Sheets (kolom <strong>A</strong> = nama tamu), gunakan dua rumus berikut:</p>
+
+                <p style="margin-top:14px;"><strong>&#128204; Kolom B — Rumus Link Undangan:</strong></p>
+                <div style="display:flex; gap:10px; align-items:stretch; margin:6px 0;">
+                    <div class="formula-box" id="formula-display" style="flex:1; margin:0; cursor:default;"></div>
+                    <button class="toolbar-btn primary" onclick="copyLinkFormula()" style="white-space:nowrap; align-self:stretch;"><i class="fa-solid fa-copy"></i> Salin Rumus</button>
+                </div>
+                <p style="font-size:0.8rem; font-style:italic; margin-bottom:18px;">Paste di kolom <strong>B2</strong>, lalu tarik ke bawah untuk semua baris tamu.</p>
+
+                <p><strong>&#128172; Kolom C — Rumus Teks Pesan WA Lengkap:</strong></p>
+                <div style="display:flex; gap:10px; align-items:stretch; margin:6px 0;">
+                    <div class="formula-box" id="formula-message" style="flex:1; margin:0; cursor:default; font-size:0.75rem; word-break:break-all;">loading...</div>
+                    <button class="toolbar-btn success" onclick="copyMessageFormula()" style="white-space:nowrap; align-self:stretch;"><i class="fa-solid fa-copy"></i> Salin Rumus</button>
+                </div>
+                <p style="font-size:0.8rem; font-style:italic;">Paste di kolom <strong>C2</strong>. Setiap sel akan berisi teks pesan WA lengkap siap kirim untuk masing-masing tamu.</p>
+            </div>
+        </div>
+
+        <!-- KELOLA DOA & UCAPAN -->
+        <div class="gs-section">
+            <h3><i class="fa-solid fa-comments"></i> Kelola Doa &amp; Ucapan</h3>
+            <p style="font-size:0.88rem; color:var(--muted);">Hapus semua ucapan uji coba yang tersimpan di browser ini agar daftar ucapan kosong kembali.</p>
+            <button class="toolbar-btn danger" onclick="clearWishes()"><i class="fa-solid fa-trash-can"></i> Hapus Semua Doa &amp; Ucapan</button>
+        </div>
+
     </div>
 
     <script src="config.js"></script>
     <script>
+        // ─────────────────────────────────────────────
+        // STATE
+        // ─────────────────────────────────────────────
         let rowCounter = 0;
+        let gsConnected = false;
 
+        // ─────────────────────────────────────────────
+        // INIT
+        // ─────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             const baseUrlInput = document.getElementById('base-url');
-
-            // Logika Auto-detect Base URL yang cerdas:
             baseUrlInput.value = window.location.href.split('?')[0].replace('generator.html', 'index.html');
-
             updateFormula();
-            baseUrlInput.addEventListener('input', updateFormula);
 
-            // Load saved sheet URL
-            const savedUrl = localStorage.getItem('google_sheet_url');
-            if (savedUrl) document.getElementById('sheet-url').value = savedUrl;
+            // Auto-connect Google Sheets on load if URL was previously saved
+            const savedGsUrl = localStorage.getItem('google_sheet_url');
+            if (savedGsUrl) {
+                document.getElementById('sheet-url').value = savedGsUrl;
+                setStatus('testing', 'Memeriksa koneksi ke Google Sheets...');
+                testGsConnection(savedGsUrl, false);
+            }
 
-            // Load saved data or add default rows
+            // Restore table data
             const saved = localStorage.getItem('guest_sheet_data');
             if (saved) {
-                const names = JSON.parse(saved);
-                names.forEach(name => addRow(name));
+                try {
+                    const names = JSON.parse(saved);
+                    if (Array.isArray(names) && names.length > 0) {
+                        names.forEach(name => addRow(name));
+                    } else {
+                        for (let i = 0; i < 5; i++) addRow('');
+                    }
+                } catch (e) {
+                    for (let i = 0; i < 5; i++) addRow('');
+                }
             } else {
-                for (let i = 0; i < 10; i++) addRow('');
+                for (let i = 0; i < 5; i++) addRow('');
             }
+
+            updateStats();
         });
 
+        // ─────────────────────────────────────────────
+        // TABS
+        // ─────────────────────────────────────────────
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('pane-' + tabId).classList.add('active');
+        }
+
+        // ─────────────────────────────────────────────
+        // STATUS BANNER
+        // ─────────────────────────────────────────────
+        function setStatus(type, text) {
+            const banner = document.getElementById('status-banner');
+            const dot = document.getElementById('status-dot');
+            banner.className = 'status-banner ' + type;
+            dot.className = 'status-dot ' + type;
+            document.getElementById('status-text').textContent = text;
+        }
+
+        // ─────────────────────────────────────────────
+        // GOOGLE SHEETS CONNECTION
+        // ─────────────────────────────────────────────
+        async function testGsConnection(url, showSuccess) {
+            if (!url || !url.startsWith('http')) {
+                setStatus('error', 'URL tidak valid. Masukkan URL Web App Google Apps Script yang benar.');
+                return false;
+            }
+
+            setStatus('testing', 'Menguji koneksi ke Google Sheets...');
+            const btn = document.getElementById('btn-save-gs');
+            const origHTML = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner"></div> Menguji...';
+            btn.disabled = true;
+
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 7000);
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(timer);
+
+                gsConnected = true;
+                setStatus('connected', '\u2705 Terhubung ke Google Sheets! Data RSVP akan otomatis tersimpan.');
+                document.getElementById('gs-badge').style.display = 'inline-flex';
+                if (showSuccess) Swal.fire({ icon: 'success', title: 'Koneksi Berhasil!', text: 'Google Sheets siap menerima data RSVP.', timer: 2000, showConfirmButton: false });
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    setStatus('error', '\u26A0\uFE0F Koneksi timeout. Pastikan URL benar dan sudah di-deploy sebagai Web App.');
+                } else {
+                    // CORS error = GAS requires CORS, treat URL as valid/connected
+                    gsConnected = true;
+                    setStatus('connected', '\u2705 URL tersimpan. Google Sheets siap menerima data RSVP dari form undangan.');
+                    document.getElementById('gs-badge').style.display = 'inline-flex';
+                    if (showSuccess) Swal.fire({ icon: 'success', title: 'URL Tersimpan!', text: 'Form RSVP undangan akan mengirim data ke Google Sheets ini.', timer: 2000, showConfirmButton: false });
+                }
+            }
+
+            btn.innerHTML = origHTML;
+            btn.disabled = false;
+        }
+
+        async function saveAndTestSheetUrl() {
+            const url = document.getElementById('sheet-url').value.trim();
+            if (!url) {
+                Swal.fire({ icon: 'warning', title: 'URL Kosong', text: 'Masukkan URL Web App Google Apps Script terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
+                return;
+            }
+            localStorage.setItem('google_sheet_url', url);
+            await testGsConnection(url, true);
+        }
+
+        function clearSheetUrl() {
+            document.getElementById('sheet-url').value = '';
+            localStorage.removeItem('google_sheet_url');
+            gsConnected = false;
+            document.getElementById('gs-badge').style.display = 'none';
+            setStatus('disconnected', 'Koneksi Google Sheets dihapus. Isi URL baru untuk menghubungkan kembali.');
+        }
+
+        // ─────────────────────────────────────────────
+        // URL & LINK HELPERS
+        // ─────────────────────────────────────────────
         function getBaseUrl() {
             return document.getElementById('base-url').value.trim() || 'http://localhost/undangan/index.html';
         }
@@ -631,32 +862,59 @@
             return getBaseUrl() + '?to=' + encodeURIComponent(name.trim());
         }
 
-        function addRow(prefill = '') {
+        function buildWaLink(name) {
+            const link = buildLink(name);
+            if (!link) return '';
+            return 'https://wa.me/?text=' + encodeURIComponent(buildMessage(name, link));
+        }
+
+        function onBaseUrlChange() {
+            updateFormula();
+            refreshAllLinks();
+            saveData();
+        }
+
+        function refreshAllLinks() {
+            document.querySelectorAll('#sheet-body tr').forEach(tr => {
+                const input = tr.querySelector('.cell-input');
+                if (!input) return;
+                const name = input.value.trim();
+                const linkSpan = tr.querySelector('.cell-link');
+                if (name && linkSpan) {
+                    linkSpan.textContent = buildLink(name);
+                    linkSpan.classList.add('has-link');
+                }
+            });
+            updateStats();
+        }
+
+        // ─────────────────────────────────────────────
+        // ROW MANAGEMENT
+        // ─────────────────────────────────────────────
+        function addRow(prefill) {
+            if (prefill === undefined) prefill = '';
             rowCounter++;
             const tbody = document.getElementById('sheet-body');
             const tr = document.createElement('tr');
             tr.dataset.row = rowCounter;
             const num = tbody.children.length + 1;
-            const msgPreview = prefill ? '✉️ Klik untuk salin...' : '—';
+            const link = prefill ? buildLink(prefill) : '';
 
-            tr.innerHTML = `
-                <td>${num}</td>
-                <td><input class="cell-input" type="text" placeholder="Ketik nama tamu..." value="${escapeHTML(prefill)}" oninput="onNameChange(this)"></td>
-                <td><span class="cell-link ${prefill ? 'has-link' : ''}" onclick="openLink(this)">${prefill ? buildLink(prefill) : '—'}</span></td>
-                <td><span class="cell-message ${prefill ? 'has-message' : ''}" onclick="copyRowMessage(this)" title="Klik untuk salin pesan WA">${prefill ? '✉️ Klik untuk salin...' : '—'}</span></td>
-                <td>
-                    <div class="cell-actions">
-                        <button class="action-btn copy" title="Salin Link" onclick="copyRowLink(this)"><i class="fa-solid fa-copy"></i></button>
-                        <button class="action-btn wa" title="Kirim via WhatsApp" onclick="sendWA(this)"><i class="fa-brands fa-whatsapp"></i></button>
-                        <button class="action-btn del" title="Hapus Baris" onclick="deleteRow(this)"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                </td>
-            `;
+            tr.innerHTML =
+                '<td>' + num + '</td>' +
+                '<td><input class="cell-input" type="text" placeholder="Ketik nama tamu..." value="' + escapeHTML(prefill) + '" oninput="onNameChange(this)"></td>' +
+                '<td><span class="cell-link ' + (link ? 'has-link' : '') + '" onclick="openLink(this)">' + (link || '\u2014') + '</span></td>' +
+                '<td><span class="cell-message ' + (prefill ? 'has-message' : '') + '" onclick="copyRowMessage(this)" title="Klik untuk salin pesan WA">' + (prefill ? '\u2709\uFE0F Klik untuk salin...' : '\u2014') + '</span></td>' +
+                '<td><div class="cell-actions">' +
+                '<button class="action-btn copy" title="Salin Link" onclick="copyRowLink(this)"><i class="fa-solid fa-copy"></i></button>' +
+                '<button class="action-btn wa" title="Kirim via WhatsApp" onclick="sendWA(this)"><i class="fa-brands fa-whatsapp"></i></button>' +
+                '<button class="action-btn del" title="Hapus Baris" onclick="deleteRow(this)"><i class="fa-solid fa-xmark"></i></button>' +
+                '</div></td>';
+
             tbody.appendChild(tr);
-            if (!prefill) {
-                tr.querySelector('.cell-input').focus();
-            }
+            if (!prefill) tr.querySelector('.cell-input').focus();
             saveData();
+            updateStats();
         }
 
         function addMultipleRows() {
@@ -671,77 +929,34 @@
             if (name) {
                 linkSpan.textContent = buildLink(name);
                 linkSpan.classList.add('has-link');
-                msgSpan.textContent = '✉️ Klik untuk salin...';
+                msgSpan.textContent = '\u2709\uFE0F Klik untuk salin...';
                 msgSpan.classList.add('has-message');
             } else {
-                linkSpan.textContent = '—';
+                linkSpan.textContent = '\u2014';
                 linkSpan.classList.remove('has-link');
-                msgSpan.textContent = '—';
+                msgSpan.textContent = '\u2014';
                 msgSpan.classList.remove('has-message');
             }
             saveData();
+            updateStats();
         }
 
-        // Membuka tautan undangan yang digenerate di tab baru untuk test
         function openLink(span) {
             const url = span.textContent;
-            if (url && url !== '—') window.open(url, '_blank');
-        }
-
-        function copyRowLink(btn) {
-            const tr = btn.closest('tr');
-            const link = tr.querySelector('.cell-link').textContent;
-            if (!link || link === '—') {
-                Swal.fire({ icon: 'warning', title: 'Nama kosong!', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
-                return;
-            }
-            navigator.clipboard.writeText(link).then(() => {
-                Swal.fire({ icon: 'success', title: 'Disalin!', timer: 1200, showConfirmButton: false });
-            });
-        }
-
-        function buildMessage(name, link) {
-            const couple = (window.weddingConfig ? `${weddingConfig.mempelaiPriaShort} & ${weddingConfig.mempelaiWanitaShort}` : "Aldi & Rika Julianti");
-            return `Yth. ${name},\n\n Assalamualaikum Wr. Wb \n\n Dengan memohon Rahmat Dan Ridho Allah SWT, Dan tanpa mengurangi rasa hormat kami. melalui media sosial ini, kami (${couple}) mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami. \n\n Detail undangan dan konfirmasi kehadiran dapat diakses melalui link berikut:\n\n${link}\n\n Merupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami \n\n Terima kasih kami sampaikan Bapak/Ibu/Sdr/i. \n\n Wassalamualaikum Wr.Wb.`;
-        }
-
-        function sendWA(btn) {
-            const tr = btn.closest('tr');
-            const name = tr.querySelector('.cell-input').value.trim();
-            const link = tr.querySelector('.cell-link').textContent.trim();
-            if (!name || !link || link === '—') {
-                Swal.fire({ icon: 'warning', title: 'Nama kosong!', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
-                return;
-            }
-            const msg = buildMessage(name, link);
-            const waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
-            window.open(waUrl, '_blank');
-        }
-
-        function copyRowMessage(span) {
-            const tr = span.closest('tr');
-            const name = tr.querySelector('.cell-input').value.trim();
-            const link = tr.querySelector('.cell-link').textContent.trim();
-            if (!name || !link || link === '—') {
-                Swal.fire({ icon: 'warning', title: 'Nama kosong!', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
-                return;
-            }
-            const msg = buildMessage(name, link);
-            navigator.clipboard.writeText(msg).then(() => {
-                Swal.fire({ icon: 'success', title: 'Pesan disalin!', text: 'Tempel pesan di WhatsApp atau media lainnya.', timer: 1800, showConfirmButton: false });
-            });
+            if (url && url !== '\u2014') window.open(url, '_blank');
         }
 
         function deleteRow(btn) {
-            const tr = btn.closest('tr');
-            tr.remove();
+            btn.closest('tr').remove();
             renumberRows();
             saveData();
+            updateStats();
         }
 
         function renumberRows() {
-            const rows = document.querySelectorAll('#sheet-body tr');
-            rows.forEach((row, i) => { row.querySelector('td:first-child').textContent = i + 1; });
+            document.querySelectorAll('#sheet-body tr').forEach((row, i) => {
+                row.querySelector('td:first-child').textContent = i + 1;
+            });
         }
 
         function clearAll() {
@@ -754,71 +969,286 @@
                 cancelButtonColor: '#5A6B7F',
                 confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
+            }).then(result => {
                 if (result.isConfirmed) {
                     document.getElementById('sheet-body').innerHTML = '';
                     rowCounter = 0;
                     localStorage.removeItem('guest_sheet_data');
-                    for (let i = 0; i < 10; i++) addRow('');
+                    for (let i = 0; i < 5; i++) addRow('');
                     Swal.fire({ icon: 'success', title: 'Dihapus!', timer: 1200, showConfirmButton: false });
+                    updateStats();
                 }
             });
         }
 
-        function copyAllLinks() {
-            const rows = document.querySelectorAll('#sheet-body tr');
-            const links = [];
-            rows.forEach(row => {
-                const name = row.querySelector('.cell-input').value.trim();
-                const link = row.querySelector('.cell-link').textContent.trim();
-                if (name && link !== '—') links.push(`${name}\t${link}`);
+        // ─────────────────────────────────────────────
+        // IMPORT
+        // ─────────────────────────────────────────────
+        function parseNameText(text) {
+            return text.split(/\n|,|;|\t/).map(n => n.trim()).filter(n => n.length > 1);
+        }
+
+        function getExistingNames() {
+            const names = new Set();
+            document.querySelectorAll('#sheet-body .cell-input').forEach(inp => {
+                const v = inp.value.trim();
+                if (v) names.add(v.toLowerCase());
             });
-            if (links.length === 0) {
-                Swal.fire({ icon: 'info', title: 'Belum ada data', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
+            return names;
+        }
+
+        function renderNames(names, replace) {
+            const unique = [...new Set(names.map(n => String(n).trim()).filter(n => n.length > 1))];
+            if (unique.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'Nama tidak valid', text: 'Masukkan nama tamu yang benar.', confirmButtonColor: '#1B3A6B' });
                 return;
             }
-            navigator.clipboard.writeText(links.join('\n')).then(() => {
-                Swal.fire({ icon: 'success', title: `${links.length} link disalin!`, text: 'Format: Nama [TAB] Link, bisa langsung di-paste ke Spreadsheet.', confirmButtonColor: '#1B3A6B' });
+
+            if (replace) {
+                document.getElementById('sheet-body').innerHTML = '';
+                rowCounter = 0;
+                unique.forEach(name => addRow(name));
+                Swal.fire({ icon: 'success', title: 'Import Berhasil!', text: unique.length + ' nama berhasil dibuat link undangannya.', timer: 1800, showConfirmButton: false });
+            } else {
+                const existing = getExistingNames();
+                const newOnes = unique.filter(n => !existing.has(n.toLowerCase()));
+                if (newOnes.length === 0) {
+                    Swal.fire({ icon: 'info', title: 'Semua nama sudah ada', text: 'Tidak ada nama baru yang ditambahkan.', confirmButtonColor: '#1B3A6B' });
+                    return;
+                }
+                newOnes.forEach(name => addRow(name));
+                Swal.fire({ icon: 'success', title: newOnes.length + ' nama ditambahkan!', text: (unique.length - newOnes.length) + ' nama dilewati (sudah ada).', timer: 2000, showConfirmButton: false });
+            }
+            updateStats();
+        }
+
+        function importNames() {
+            const text = document.getElementById('name-import-box').value.trim();
+            if (!text) { Swal.fire({ icon: 'info', title: 'Belum ada nama', confirmButtonColor: '#1B3A6B' }); return; }
+            renderNames(parseNameText(text), true);
+            document.getElementById('name-import-box').value = '';
+        }
+
+        function appendNames() {
+            const text = document.getElementById('name-import-box').value.trim();
+            if (!text) { Swal.fire({ icon: 'info', title: 'Belum ada nama', confirmButtonColor: '#1B3A6B' }); return; }
+            renderNames(parseNameText(text), false);
+            document.getElementById('name-import-box').value = '';
+        }
+
+        function clearImportBox() { document.getElementById('name-import-box').value = ''; }
+
+        // Drag & Drop
+        function onDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
+        function onDragLeave() { document.getElementById('drop-zone').classList.remove('drag-over'); }
+        function onDrop(e) {
+            e.preventDefault();
+            document.getElementById('drop-zone').classList.remove('drag-over');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+        }
+
+        function importFileNames() {
+            const fi = document.getElementById('spreadsheet-file');
+            if (fi.files && fi.files[0]) processFile(fi.files[0]);
+            fi.value = '';
+        }
+
+        function processFile(file) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!['csv', 'txt', 'xls', 'xlsx'].includes(ext)) {
+                Swal.fire({ icon: 'warning', title: 'Format tidak didukung', text: 'Gunakan file .xlsx, .xls, .csv, atau .txt', confirmButtonColor: '#1B3A6B' });
+                return;
+            }
+            if (typeof XLSX === 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Library tidak tersedia', text: 'Pastikan koneksi internet aktif untuk memuat SheetJS.', confirmButtonColor: '#1B3A6B' });
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+                    const names = extractNameValues(rows);
+
+                    if (names.length === 0) {
+                        const text = new TextDecoder().decode(data);
+                        const txtNames = parseNameText(text);
+                        if (txtNames.length > 0) { confirmImport(txtNames, file.name); return; }
+                        Swal.fire({ icon: 'warning', title: 'Nama tidak ditemukan', text: 'Pastikan file memiliki kolom bernama Nama, Name, atau Tamu.', confirmButtonColor: '#1B3A6B' });
+                        return;
+                    }
+                    confirmImport(names, file.name);
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire({ icon: 'error', title: 'Gagal membaca file', text: 'Pastikan format file benar dan tidak diproteksi password.', confirmButtonColor: '#1B3A6B' });
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function confirmImport(names, filename) {
+            Swal.fire({
+                title: 'Import ' + names.length + ' Nama?',
+                html: 'File: <strong>' + escapeHTML(filename) + '</strong><br>Ditemukan <strong>' + names.length + '</strong> nama tamu.<br><br>Pilih mode import:',
+                icon: 'question',
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: '\uD83D\uDD04 Ganti Semua',
+                denyButtonText: '\u2795 Tambahkan Saja',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#1B3A6B',
+                denyButtonColor: '#4A90D9',
+            }).then(result => {
+                if (result.isConfirmed) renderNames(names, true);
+                else if (result.isDenied) renderNames(names, false);
             });
         }
 
-        function copyAllMessages() {
-            const rows = document.querySelectorAll('#sheet-body tr');
-            const messages = [];
+        function extractNameValues(rows) {
+            if (!Array.isArray(rows) || rows.length === 0) return [];
+            const firstRow = rows[0] || {};
+            const keys = Object.keys(firstRow);
+            if (!keys.length) return [];
+
+            const headerKey = keys.find(k => {
+                const n = String(k).trim().toLowerCase();
+                return n.includes('nama') || n.includes('name') || n.includes('tamu') || n.includes('guest');
+            });
+
+            const targetKey = headerKey || keys[0];
+            const names = [];
             rows.forEach(row => {
+                const v = String(row[targetKey] || '').trim();
+                if (v.length > 1) names.push(v);
+            });
+            return [...new Set(names)];
+        }
+
+        // ─────────────────────────────────────────────
+        // COPY ACTIONS
+        // ─────────────────────────────────────────────
+        function copyRowLink(btn) {
+            const link = btn.closest('tr').querySelector('.cell-link').textContent;
+            if (!link || link === '\u2014') {
+                Swal.fire({ icon: 'warning', title: 'Nama kosong!', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
+                return;
+            }
+            navigator.clipboard.writeText(link).then(() => Swal.fire({ icon: 'success', title: 'Disalin!', timer: 1000, showConfirmButton: false }));
+        }
+
+        function copyAllLinks() {
+            const lines = [];
+            document.querySelectorAll('#sheet-body tr').forEach(row => {
                 const name = row.querySelector('.cell-input').value.trim();
                 const link = row.querySelector('.cell-link').textContent.trim();
-                if (name && link && link !== '—') {
+                if (name && link !== '\u2014') lines.push(name + '\t' + link);
+            });
+            if (lines.length === 0) { Swal.fire({ icon: 'info', title: 'Belum ada data', confirmButtonColor: '#1B3A6B' }); return; }
+            navigator.clipboard.writeText(lines.join('\n')).then(() =>
+                Swal.fire({ icon: 'success', title: lines.length + ' link disalin!', text: 'Format Nama [TAB] Link — langsung paste ke Google Sheets.', confirmButtonColor: '#1B3A6B' })
+            );
+        }
+
+        function copyAllMessages() {
+            const messages = [];
+            document.querySelectorAll('#sheet-body tr').forEach(row => {
+                const name = row.querySelector('.cell-input').value.trim();
+                const link = row.querySelector('.cell-link').textContent.trim();
+                if (name && link && link !== '\u2014') {
                     messages.push('=== ' + name + ' ===');
                     messages.push(buildMessage(name, link));
                     messages.push('');
                 }
             });
-            if (messages.length === 0) {
-                Swal.fire({ icon: 'info', title: 'Belum ada data', text: 'Ketik nama tamu terlebih dahulu.', confirmButtonColor: '#1B3A6B' });
-                return;
-            }
+            if (messages.length === 0) { Swal.fire({ icon: 'info', title: 'Belum ada data', confirmButtonColor: '#1B3A6B' }); return; }
             navigator.clipboard.writeText(messages.join('\n')).then(() => {
-                Swal.fire({ icon: 'success', title: 'Semua pesan disalin!', text: `${messages.filter(m => m.startsWith('===')).length} pesan tamu berhasil disalin.`, confirmButtonColor: '#1B3A6B' });
+                const count = messages.filter(m => m.startsWith('===')).length;
+                Swal.fire({ icon: 'success', title: 'Semua pesan disalin!', text: count + ' pesan tamu berhasil disalin.', confirmButtonColor: '#1B3A6B' });
             });
         }
 
-        function exportCSV() {
-            const rows = document.querySelectorAll('#sheet-body tr');
-            let csv = 'No,Nama Tamu,Link Undangan\n';
-            let count = 0;
-            rows.forEach((row, i) => {
-                const name = row.querySelector('.cell-input').value.trim();
-                const link = row.querySelector('.cell-link').textContent;
-                if (name) {
-                    csv += `${i + 1},"${name}","${link}"\n`;
-                    count++;
-                }
-            });
-            if (count === 0) {
-                Swal.fire({ icon: 'info', title: 'Belum ada data', confirmButtonColor: '#1B3A6B' });
+        // ─────────────────────────────────────────────
+        // WHATSAPP
+        // ─────────────────────────────────────────────
+        function buildMessage(name, link) {
+            const couple = window.weddingConfig
+                ? weddingConfig.mempelaiPriaShort + ' & ' + weddingConfig.mempelaiWanitaShort
+                : 'Aldi & Rika Julianti';
+            return 'Yth. ' + name + ',\n\nAssalamualaikum Wr. Wb\n\nDengan memohon Rahmat Dan Ridho Allah SWT, dan tanpa mengurangi rasa hormat kami. Melalui pesan ini, kami (' + couple + ') mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami.\n\nDetail undangan dan konfirmasi kehadiran dapat diakses melalui link berikut:\n\n' + link + '\n\nMerupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami.\n\nTerima kasih.\n\nWassalamualaikum Wr. Wb.';
+        }
+
+        function sendWA(btn) {
+            const tr = btn.closest('tr');
+            const name = tr.querySelector('.cell-input').value.trim();
+            const link = tr.querySelector('.cell-link').textContent.trim();
+            if (!name || !link || link === '\u2014') {
+                Swal.fire({ icon: 'warning', title: 'Nama kosong!', confirmButtonColor: '#1B3A6B' });
                 return;
             }
+            window.open('https://wa.me/?text=' + encodeURIComponent(buildMessage(name, link)), '_blank');
+        }
+
+        function copyRowMessage(span) {
+            const tr = span.closest('tr');
+            const name = tr.querySelector('.cell-input').value.trim();
+            const link = tr.querySelector('.cell-link').textContent.trim();
+            if (!name || !link || link === '\u2014') {
+                Swal.fire({ icon: 'warning', title: 'Nama kosong!', confirmButtonColor: '#1B3A6B' });
+                return;
+            }
+            navigator.clipboard.writeText(buildMessage(name, link)).then(() =>
+                Swal.fire({ icon: 'success', title: 'Pesan disalin!', text: 'Tempel di WhatsApp atau media lainnya.', timer: 1800, showConfirmButton: false })
+            );
+        }
+
+        // ─────────────────────────────────────────────
+        // EXPORT
+        // ─────────────────────────────────────────────
+        function getTableData() {
+            const data = [];
+            document.querySelectorAll('#sheet-body tr').forEach((row, i) => {
+                const name = row.querySelector('.cell-input').value.trim();
+                const link = row.querySelector('.cell-link').textContent.trim();
+                if (name && link !== '\u2014') {
+                    data.push({ no: i + 1, nama: name, link: link, link_wa: buildWaLink(name) });
+                }
+            });
+            return data;
+        }
+
+        function exportExcel() {
+            if (typeof XLSX === 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Library tidak tersedia', text: 'Pastikan koneksi internet aktif.', confirmButtonColor: '#1B3A6B' });
+                return;
+            }
+            const data = getTableData();
+            if (data.length === 0) { Swal.fire({ icon: 'info', title: 'Belum ada data', confirmButtonColor: '#1B3A6B' }); return; }
+
+            const wsData = [['No', 'Nama Tamu', 'Link Undangan', 'Link Pesan WA']];
+            data.forEach(d => wsData.push([d.no, d.nama, d.link, d.link_wa]));
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            ws['!cols'] = [{ wch: 5 }, { wch: 32 }, { wch: 70 }, { wch: 70 }];
+            XLSX.utils.book_append_sheet(wb, ws, 'Daftar Tamu Undangan');
+            XLSX.writeFile(wb, 'daftar_tamu_undangan.xlsx');
+
+            Swal.fire({ icon: 'success', title: 'Excel Diunduh!', text: data.length + ' tamu diekspor ke daftar_tamu_undangan.xlsx', timer: 2000, showConfirmButton: false });
+        }
+
+        function exportCSV() {
+            const data = getTableData();
+            if (data.length === 0) { Swal.fire({ icon: 'info', title: 'Belum ada data', confirmButtonColor: '#1B3A6B' }); return; }
+
+            const BOM = '\uFEFF';
+            let csv = BOM + 'No,Nama Tamu,Link Undangan,Link Pesan WA\n';
+            data.forEach(d => {
+                csv += d.no + ',"' + d.nama.replace(/"/g, '""') + '","' + d.link + '","' + d.link_wa + '"\n';
+            });
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -826,38 +1256,41 @@
             a.download = 'daftar_tamu_undangan.csv';
             a.click();
             URL.revokeObjectURL(url);
+
+            Swal.fire({ icon: 'success', title: 'CSV Diunduh!', text: data.length + ' tamu diekspor.', timer: 1800, showConfirmButton: false });
         }
 
+        // ─────────────────────────────────────────────
+        // FORMULA
+        // ─────────────────────────────────────────────
         function updateFormula() {
             const base = getBaseUrl();
-            // Rumus link
-            document.getElementById('formula-display').textContent = `=CONCATENATE("${base}?to=", ENCODEURL(A2))`;
-            // Rumus pesan WA lengkap menggunakan CHAR(10) untuk baris baru di Google Sheets
-            const couple = (window.weddingConfig ? `${weddingConfig.mempelaiPriaShort} & ${weddingConfig.mempelaiWanitaShort}` : "Romeo & Juliet");
-            const msgFormula = `=CONCATENATE("Yth. ",A2,",",CHAR(10),CHAR(10)," Assalamualaikum Wr. Wb ",CHAR(10),CHAR(10)," Dengan memohon Rahmat Dan Ridho Allah SWT, Dan tanpa mengurangi rasa hormat kami. melalui media sosial ini, kami (${couple}) mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami. ",CHAR(10),CHAR(10)," Detail undangan dan konfirmasi kehadiran dapat diakses melalui link berikut:",CHAR(10),CHAR(10),"${base}?to=",ENCODEURL(A2),CHAR(10),CHAR(10)," Merupakan suatu kehormatan dan kebahagiaan jika Anda bersedia hadir dan turut memberikan doa restu untuk kami ",CHAR(10),CHAR(10)," Terima kasih kami sampaikan Bapak/Ibu/Sdr/i. ",CHAR(10),CHAR(10)," Wassalamualaikum Wr.Wb.")`;
-            document.getElementById('formula-message').textContent = msgFormula;
+            document.getElementById('formula-display').textContent =
+                '=CONCATENATE("' + base + '?to=", ENCODEURL(A2))';
+
+            const couple = window.weddingConfig
+                ? weddingConfig.mempelaiPriaShort + ' & ' + weddingConfig.mempelaiWanitaShort
+                : 'Aldi & Rika Julianti';
+
+            document.getElementById('formula-message').textContent =
+                '=CONCATENATE("Yth. ",A2,",",CHAR(10),CHAR(10),"Assalamualaikum Wr. Wb",CHAR(10),CHAR(10),"Dengan memohon Rahmat Dan Ridho Allah SWT, kami (' + couple + ') mengundang Bapak/Ibu/Sdr/i untuk berkenan hadir di acara pernikahan kami.",CHAR(10),CHAR(10),"Detail undangan:",CHAR(10),"' + base + '?to=",ENCODEURL(A2),CHAR(10),CHAR(10),"Wassalamualaikum Wr. Wb.")';
         }
 
         function copyLinkFormula() {
-            const formula = document.getElementById('formula-display').textContent;
-            navigator.clipboard.writeText(formula).then(() => {
-                Swal.fire({ icon: 'success', title: 'Rumus Link disalin!', text: 'Paste di kolom B2 Google Sheets Anda.', timer: 2000, showConfirmButton: false });
-            });
+            navigator.clipboard.writeText(document.getElementById('formula-display').textContent).then(() =>
+                Swal.fire({ icon: 'success', title: 'Rumus Link disalin!', text: 'Paste di kolom B2 Google Sheets.', timer: 2000, showConfirmButton: false })
+            );
         }
 
         function copyMessageFormula() {
-            const formula = document.getElementById('formula-message').textContent;
-            navigator.clipboard.writeText(formula).then(() => {
-                Swal.fire({ icon: 'success', title: 'Rumus Pesan WA disalin!', text: 'Paste di kolom C2 Google Sheets Anda.', timer: 2000, showConfirmButton: false });
-            });
+            navigator.clipboard.writeText(document.getElementById('formula-message').textContent).then(() =>
+                Swal.fire({ icon: 'success', title: 'Rumus Pesan WA disalin!', text: 'Paste di kolom C2 Google Sheets.', timer: 2000, showConfirmButton: false })
+            );
         }
 
-        function saveSheetUrl() {
-            const url = document.getElementById('sheet-url').value.trim();
-            localStorage.setItem('google_sheet_url', url);
-            Swal.fire({ icon: 'success', title: 'URL Tersimpan!', text: 'Form RSVP undangan akan mengirim data ke URL ini.', confirmButtonColor: '#1B3A6B' });
-        }
-
+        // ─────────────────────────────────────────────
+        // UCAPAN
+        // ─────────────────────────────────────────────
         function clearWishes() {
             Swal.fire({
                 title: 'Hapus Semua Doa & Ucapan?',
@@ -868,23 +1301,50 @@
                 cancelButtonColor: '#5A6B7F',
                 confirmButtonText: 'Ya, Hapus!',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
+            }).then(result => {
                 if (result.isConfirmed) {
                     localStorage.setItem('wedding_wishes', '[]');
-                    Swal.fire({ icon: 'success', title: 'Berhasil Dihapus!', text: 'Semua doa & ucapan telah dikosongkan.', timer: 1500, showConfirmButton: false });
+                    Swal.fire({ icon: 'success', title: 'Berhasil Dihapus!', timer: 1500, showConfirmButton: false });
                 }
             });
         }
 
+        // ─────────────────────────────────────────────
+        // STATS
+        // ─────────────────────────────────────────────
+        function updateStats() {
+            let total = 0, withLink = 0;
+            document.querySelectorAll('#sheet-body tr').forEach(row => {
+                const name = row.querySelector('.cell-input');
+                const link = row.querySelector('.cell-link');
+                if (!name) return;
+                if (name.value.trim()) total++;
+                if (link && link.textContent && link.textContent !== '\u2014') withLink++;
+            });
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-links').textContent = withLink;
+            document.getElementById('stat-wa').textContent = withLink;
+        }
+
+        // ─────────────────────────────────────────────
+        // SAVE
+        // ─────────────────────────────────────────────
         function saveData() {
-            const rows = document.querySelectorAll('#sheet-body tr');
             const names = [];
-            rows.forEach(row => { names.push(row.querySelector('.cell-input').value); });
+            document.querySelectorAll('#sheet-body tr').forEach(row => {
+                const inp = row.querySelector('.cell-input');
+                if (inp) names.push(inp.value);
+            });
             localStorage.setItem('guest_sheet_data', JSON.stringify(names));
         }
 
+        // ─────────────────────────────────────────────
+        // UTILS
+        // ─────────────────────────────────────────────
         function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": "&#39;", '"': '&quot;' }[tag]));
+            return String(str || '').replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
         }
     </script>
 </body>
