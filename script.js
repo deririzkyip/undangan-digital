@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mengirim...`;
 
-            const GOOGLE_SCRIPT_URL = localStorage.getItem('google_sheet_url') || "";
+            const GOOGLE_SCRIPT_URL = (window.weddingConfig && window.weddingConfig.googleScriptUrl) || "";
             let sheetOk = false;
 
             if (GOOGLE_SCRIPT_URL) {
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('kehadiran', attendance);
                     formData.append('jumlah_tamu', guests);
                     formData.append('ucapan', message);
-                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData.toString() });
+                    await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: formData });
                     sheetOk = true;
                 } catch (err) { console.error("Gagal kirim ke Sheets:", err); }
             }
