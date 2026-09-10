@@ -56,22 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return urlParams.get(param);
     };
 
-    // Bersihkan ucapan otomatis jika ada parameter ?clear=1 di URL
-    if (getQueryParam('clear') === '1' || getQueryParam('clear') === 'true') {
-        localStorage.setItem('wedding_wishes', '[]');
-        const url = new URL(window.location.href);
-        url.searchParams.delete('clear');
-        window.history.replaceState({}, '', url.toString());
-        setTimeout(() => {
-            Swal.fire({
-                icon: 'success',
-                title: 'Dibersihkan!',
-                text: 'Semua doa & ucapan telah dihapus dari browser ini.',
-                confirmButtonColor: '#1B3A6B'
-            });
-        }, 100);
-    }
-
     const rawGuestName = getQueryParam('to');
     const guestNameElement = document.getElementById('guest-name');
     const inputNameElement = document.getElementById('input-name');
@@ -224,7 +208,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // 7. LIGHTBOX GALLERY
+    // 7. COPY BANK ACCOUNT NUMBER
+    const copyButtons = document.querySelectorAll('.copy-button');
+
+    const copyToClipboard = async (text) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return;
+        }
+
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = text;
+        tempTextArea.setAttribute('readonly', '');
+        tempTextArea.style.position = 'fixed';
+        tempTextArea.style.opacity = '0';
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+    };
+
+    copyButtons.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const accountNumber = btn.dataset.copy;
+            try {
+                await copyToClipboard(accountNumber);
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin';
+                btn.title = 'Nomor rekening disalin';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-copy"></i> Salin';
+                    btn.title = '';
+                }, 1200);
+            } catch (error) {
+                btn.innerHTML = '<i class="fa-solid fa-exclamation"></i> Gagal';
+                btn.title = 'Salin gagal';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-copy"></i> Salin';
+                    btn.title = '';
+                }, 1200);
+            }
+        });
+    });
+
+    // 8. LIGHTBOX GALLERY
     const galleryImages = [
         "https://res.cloudinary.com/aqry5h7i/image/upload/v1789046276/SNOW_20260907_160756_314.jpg.jpg",
         "https://res.cloudinary.com/aqry5h7i/image/upload/v1789046274/SNOW_20260907_195130_086.jpg.jpg",
@@ -268,96 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 8. BUKU TAMU / RSVP & UCAPAN
     const rsvpForm = document.getElementById('rsvp-form');
-    const wishesContainer = document.getElementById('wishes-container');
-    const wishesCount = document.getElementById('wishes-count');
-
-    const defaultWishes = [];
-
-    const getWishes = () => {
-        const saved = localStorage.getItem('wedding_wishes');
-        if (saved) return JSON.parse(saved);
-        localStorage.setItem('wedding_wishes', JSON.stringify(defaultWishes));
-        return defaultWishes;
-    };
-
-    const sanitizeHTML = (str) => {
-        return str.replace(/[&<>'"]/g, tag => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[tag] || tag));
-    };
-
-    const normalizeWish = (wish) => {
-        if (!wish || typeof wish !== 'object') return null;
-        const wishName = wish.name || wish.nama || wish.Nama || '';
-        const wishAttendance = wish.attendance || wish.kehadiran || wish.Kehadiran || 'Hadir';
-        const wishGuests = wish.guests || wish.jumlah_tamu || wish.Jumlah_Tamu || 1;
-        const wishMessage = wish.message || wish.ucapan || wish.Ucapan || '';
-        const wishTime = wish.time || wish.tanggal || wish.Tanggal || new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-
-        return {
-            name: String(wishName),
-            attendance: String(wishAttendance),
-            guests: Number(wishGuests),
-            message: String(wishMessage),
-            time: String(wishTime)
-        };
-    };
-
-    const fetchSheetWishes = async () => {
-        const sheetUrl = localStorage.getItem('google_sheet_url') || '';
-        if (!sheetUrl) return [];
-
-        try {
-            const response = await fetch(sheetUrl, { method: 'GET' });
-            if (!response.ok) return [];
-
-            const payload = await response.json();
-            let rows = [];
-
-            if (Array.isArray(payload)) {
-                rows = payload;
-            } else if (Array.isArray(payload.items)) {
-                rows = payload.items;
-            } else if (Array.isArray(payload.data)) {
-                rows = payload.data;
-            } else if (payload.result === 'success' && Array.isArray(payload.data)) {
-                rows = payload.data;
-            }
-
-            return rows.map(normalizeWish).filter(Boolean);
-        } catch (err) {
-            console.warn('Gagal mengambil ucapan dari Google Sheets:', err);
-            return [];
-        }
-    };
-
-    const renderWishes = (wishes = getWishes()) => {
-        wishesCount.textContent = wishes.length;
-
-        if (wishes.length === 0) {
-            wishesContainer.innerHTML = `
-                <div class="empty-wishes text-center">
-                    <i class="fa-solid fa-comments"></i>
-                    <p>Belum ada ucapan. Jadilah yang pertama memberikan doa restu!</p>
-                </div>`;
-            return;
-        }
-
-        wishesContainer.innerHTML = [...wishes].reverse().map(wish => {
-            let badgeClass = 'hadir';
-            if (wish.attendance === 'Tidak Hadir') badgeClass = 'tidak-hadir';
-            if (wish.attendance === 'Ragu-ragu') badgeClass = 'ragu-ragu';
-            return `
-                <div class="wish-bubble">
-                    <div class="wish-header">
-                        <span class="wish-name">${sanitizeHTML(wish.name)}</span>
-                        <span class="wish-badge ${badgeClass}">${wish.attendance}</span>
-                    </div>
-                    <p class="wish-message">${sanitizeHTML(wish.message)}</p>
-                    <div class="wish-time">${wish.time}</div>
-                </div>`;
-        }).join('');
-    };
 
     if (rsvpForm) {
         rsvpForm.addEventListener('submit', async (e) => {
@@ -396,33 +332,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (err) { console.error("Gagal kirim ke Sheets:", err); }
             }
 
-            const current = getWishes();
-            current.push(newWish);
-            localStorage.setItem('wedding_wishes', JSON.stringify(current));
-
             rsvpForm.reset();
             if (rawGuestName) {
                 inputNameElement.value = decodeURIComponent(rawGuestName.replace(/\+/g, ' '));
             }
-            renderWishes();
 
             btnSubmit.disabled = false;
             btnSubmit.innerHTML = originalBtnContent;
 
-            let alertMsg = 'Ucapan Anda berhasil disimpan!';
+            let alertMsg = 'Ucapan Anda berhasil dikirim!';
             if (GOOGLE_SCRIPT_URL && sheetOk) alertMsg = 'Konfirmasi & ucapan berhasil dikirim ke Google Sheets!';
-            else if (GOOGLE_SCRIPT_URL && !sheetOk) alertMsg = 'Ucapan disimpan lokal, tapi gagal terhubung ke Google Sheets.';
+            else if (GOOGLE_SCRIPT_URL && !sheetOk) alertMsg = 'Gagal terhubung ke Google Sheets.';
 
             Swal.fire({ icon: 'success', title: 'Terima Kasih!', text: alertMsg, confirmButtonColor: '#1B3A6B' });
         });
     }
 
-    const loadWishesFromSheet = async () => {
-        const remoteWishes = await fetchSheetWishes();
-        const localWishes = getWishes();
-        const mergedWishes = [...remoteWishes, ...localWishes];
-        renderWishes(mergedWishes);
-    };
-
-    loadWishesFromSheet();
 });
